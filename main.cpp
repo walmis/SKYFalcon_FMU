@@ -13,6 +13,7 @@
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 
 using namespace xpcc;
+using namespace stm32;
 
 extern "C"
 void HardFault_Handler() {
@@ -34,14 +35,20 @@ public:
 };
 Test test;
 
+dma::DMAStream st(dma::Stream::DMA2_0);
+
+uint8_t buf0[128];
+uint8_t buf1[128];
+
 int main() {
 	SystemCoreClockUpdate();
+	memset(buf0, 0xCC, 128);
 
 	stm32::SysTickTimer::enable();
 
-	PA0::setFunction(GPIO_AF_TIM2);
-	PA1::setFunction(GPIO_AF_TIM2);
-	PA6::setFunction(GPIO_AF_TIM3);
+	PA0::setFunction(AltFunction::AF_TIM2);
+	PA1::setFunction(AltFunction::AF_TIM2);
+	PA6::setFunction(AltFunction::AF_TIM3);
 
 	stm32::GPTimer3::enable();
 
@@ -59,9 +66,21 @@ int main() {
 
 	stm32::I2cMaster1::initialize();
 
+	dma::Config cfg;
+	cfg.bufferSize(128)
+			->xferDirection(dma::XferDir::MemoryToMemory)
+			->memoryInc(dma::MemoryInc::Enable)
+			->peripheralInc(dma::PeripheralInc::Enable)
+			->periphBaseAddress((uint32_t)buf0)
+			->memory0BaseAddress((uint32_t)buf1);
 
-	PB6::setFunction(GPIO_AF_I2C1);
-	PB9::setFunction(GPIO_AF_I2C1);
+
+	st.init(cfg);
+	st.enable();
+
+
+	PB6::setFunction(AltFunction::AF_I2C1);
+	PB9::setFunction(AltFunction::AF_I2C1);
 	//PB6::setOutput();
 	//PA9::setFunction(GPIO_AF_USART1);
 
@@ -78,8 +97,6 @@ int main() {
 	xpcc::I2cWriteReadAdapter delegate;
 
 	uint8_t buf[2] = {0x55, 0x55};
-
-
 
 	volatile uint32_t count = 0;
 	while(1) {
