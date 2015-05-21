@@ -11,16 +11,16 @@
 					</externalSetting>
 				</externalSettings>
 				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release,org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.735040115" name="Release" parent="cdt.managedbuild.config.gnu.cross.exe.release" postbuildStep="${ProjDirPath}/post-build &quot;${CWD}/${BuildArtifactFileName}&quot;">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.735040115" name="Release" parent="cdt.managedbuild.config.gnu.cross.exe.release" postbuildStep="${ProjDirPath}/post-build &quot;${CWD}/${BuildArtifactFileName}&quot;">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.735040115." name="/" resourcePath="">
 						<toolChain id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1720013810" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.base">
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.754702366" name="Architecture" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.architecture" value="ilg.gnuarmeclipse.managedbuild.cross.option.architecture.arm" valueType="enumerated"/>
@@ -97,6 +97,8 @@
 							<builder buildPath="${workspace_loc:/STM32F407-HelloWorld}/Release" id="ilg.gnuarmeclipse.managedbuild.cross.builder.251636586" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1675709528" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.1355142058" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Device/ST/STM32F4xx/Include}&quot;"/>
@@ -106,6 +108,8 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.563403948" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1104730290" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/lpc17xx/cmsis}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/lpc17xx/driver/include}&quot;"/>
@@ -121,17 +125,90 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1789330696" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.636869854" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Device/ST/STM32F4xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Declination}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/StorageManager}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_OpticalFlow}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Mission}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Navigation}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_SerialManager}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_WPNav}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Motors}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/GCS_MAVLink}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_ADC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/APM_PI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Compass}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_InertialNav}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/GCS_Console}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/RC_Channel}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/SITL}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_VRBRAIN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Notify}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_PX4}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_ServoRelayEvents}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Arming}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_AttitudeControl}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Mount}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_TECS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Parachute}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/Filter}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_FLYMAPLE}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Airspeed}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/doc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_Linux}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_Sprayer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Camera}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_RangeFinder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Rally}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_NavEKF}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_AHRS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Frsky_Telem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_AVR}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Param}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Buffer}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_PerfMon}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AC_Fence}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_AVR_SITL}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/DataFlash}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Vehicle}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_ADC_AnalogSource}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Progmem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_L1_Control}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_EPM}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Baro}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/APM_OBC}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Common}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_BoardConfig}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Terrain}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_BattMonitor}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_GPS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_SpdHgtControl}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Math}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_InertialSensor}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_HAL_Empty}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_RCMapper}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Scheduler}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Curve}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/APM_Control}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Menu}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Limits}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Relay}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.1649915261" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="STM32F4XX"/>
 									<listOptionValue builtIn="false" value="__ARM_STM32__"/>
+									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_XPCC"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti.1874264488" name="Do not use RTTI (-fno-rtti)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.315948386" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
@@ -144,11 +221,15 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1095350417" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1141657351" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="RadioHead"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="APMLib"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="xpcc"/>
 									<listOptionValue builtIn="false" value="m"/>
 									<listOptionValue builtIn="false" value="stdc++"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.272016874" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead/Cortex-M4F}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/Cortex-M4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/STM32F4}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1637698834" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
@@ -189,6 +270,20 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/xpcc"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/xpcc/STM32F4"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="xpcc" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="APMLib;cdt.managedbuild.config.gnu.cross.exe.release.1354711777.455808150" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/APMLib"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/APMLib/Cortex-M4F"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="APMLib" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="RadioHead;cdt.managedbuild.config.gnu.cross.exe.release.1354711777.1326153669" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/RadioHead"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RadioHead/Cortex-M4F"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="RadioHead" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
@@ -232,22 +327,6 @@
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083;cdt.managedbuild.tool.gnu.cpp.compiler.input.499278313">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
-				<buildOutputProvider>
-					<openAction enabled="true" filePath=""/>
-					<parser enabled="true"/>
-				</buildOutputProvider>
-				<scannerInfoProvider id="specsFile">
-					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp -mcpu=cortex-m3 -mthumb -std=gnu++11" command="arm-none-eabi-g++" useDefault="true"/>
-					<parser enabled="true"/>
-				</scannerInfoProvider>
-			</profile>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1953833917;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.324447352">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;cdt.managedbuild.tool.gnu.cross.c.compiler.1244265047;cdt.managedbuild.tool.gnu.c.compiler.input.990257984">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
@@ -264,11 +343,27 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.563403948;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1995593955">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1789330696;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1212805060">
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1953833917;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.324447352">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.181166358;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1586387539">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1789330696;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1212805060">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.735040115;cdt.managedbuild.config.gnu.cross.exe.release.735040115.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.734776083;cdt.managedbuild.tool.gnu.cpp.compiler.input.499278313">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP">
+				<buildOutputProvider>
+					<openAction enabled="true" filePath=""/>
+					<parser enabled="true"/>
+				</buildOutputProvider>
+				<scannerInfoProvider id="specsFile">
+					<runAction arguments="-E -P -v -dD ${plugin_state_location}/specs.cpp -mcpu=cortex-m3 -mthumb -std=gnu++11" command="arm-none-eabi-g++" useDefault="true"/>
+					<parser enabled="true"/>
+				</scannerInfoProvider>
+			</profile>
 		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>

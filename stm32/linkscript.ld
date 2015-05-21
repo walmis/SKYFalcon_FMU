@@ -17,6 +17,7 @@ ENTRY(Reset_Handler)
 
 EXTERN(_sbrk_r)
 EXTERN(_init)
+EXTERN(xpccFloat)
 
 /* SECTION command : Define mapping of input sections */
 /* into output sections. */

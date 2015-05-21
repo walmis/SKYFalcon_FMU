@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>STM32F407-HelloWorld</name>
+	<name>SKYFalcon_FMU</name>
 	<comment></comment>
 	<projects>
 		<project>xpcc</project>
+		<project>APMLib</project>
+		<project>RadioHead</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

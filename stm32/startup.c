@@ -307,6 +307,12 @@ inline __attribute__((always_inline)) void __ctors_init() {
 void
 Reset_Handler(void)
 {
+	//boot flag is set
+	if(RTC->BKP0R & (1<<31)) {
+
+		RTC->BKP0R &= ~(1<<31);
+		asm("bkpt");
+	}
 
 	SystemInit();
 
@@ -360,6 +366,8 @@ Reset_Handler(void)
 	RCC->AHB1RSTR |=   RCC_AHB1RSTR_GPIOERST | RCC_AHB1RSTR_GPIOFRST | RCC_AHB1RSTR_GPIOGRST | RCC_AHB1RSTR_GPIOHRST | RCC_AHB1RSTR_GPIOIRST;
 	RCC->AHB1RSTR &= ~(RCC_AHB1RSTR_GPIOERST | RCC_AHB1RSTR_GPIOFRST | RCC_AHB1RSTR_GPIOGRST | RCC_AHB1RSTR_GPIOHRST | RCC_AHB1RSTR_GPIOIRST);
 
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
 	// Setup NVIC
 	// Set vector table
 	const uint32_t offset = 0;
@@ -381,6 +389,8 @@ Reset_Handler(void)
 			SCB_SHCSR_BUSFAULTENA_Msk |
 			SCB_SHCSR_USGFAULTENA_Msk |
 			SCB_SHCSR_MEMFAULTENA_Msk;*/
+
+	SystemCoreClockUpdate();
 
 	// Call CTORS of static objects
 	__ctors_init();
