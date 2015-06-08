@@ -746,9 +746,6 @@ int main() {
 	//chThdYield();
 
 	//XPCC_LOG_DEBUG .printf("main stack size %d\n", &__main_stack_end__ - &__main_stack_base__ );
-	extern uint32_t __process_stack_end__;
-	extern uint32_t __process_stack_base__;
-	XPCC_LOG_DEBUG .printf("proc stack size %d\n", &__process_stack_end__-&__process_stack_base__);
 
 	usb.connect();
 
@@ -762,6 +759,7 @@ int main() {
 	NVIC_SetPriority(OTG_FS_IRQn, 8);
 	NVIC_SetPriority(SDIO_IRQn, 8);
 
+	radio.init();
 
 	TickerTask::tasksInit();
 	//TickerTask::tasksRun();
@@ -769,9 +767,9 @@ int main() {
 	setup();
 
 	for(;;) {
-		//dbgset();
+		dbgset();
 		loop();
-		//dbgclr();
+		dbgclr();
 		TickerTask::tick();
 	}
 

@@ -7,6 +7,11 @@ using namespace XpccHAL;
 
 extern const AP_HAL::HAL& hal;
 
+
+AP_HAL::Semaphore* I2CDriver::get_semaphore() {
+	return _semaphore;
+}
+
 void I2CDriver::begin() {
 	//hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
 }
@@ -26,9 +31,10 @@ bool I2CDriver::startTransaction() {
 		return 1;
 	}
 
-	if(!wait(100)) {
+	if(!wait(5)) {
 		XPCC_LOG_DEBUG .printf("i2c Timeout (%d)\n", getState());
 		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::reset(this));
+		I2C::busReset();
 
 		error_count++;
 		return 1;
@@ -37,7 +43,13 @@ bool I2CDriver::startTransaction() {
 	bool failed = getState() != xpcc::I2cWriteReadTransaction::AdapterState::Idle;
 	if(failed)  {
 		error_count++;
-		XPCC_LOG_DEBUG << "e3";
+
+		XPCC_LOG_DEBUG .printf("e3 %d\n", this->errno);
+		if(this->errno == xpcc::I2cMaster::Error::BusCondition) {
+			I2C::busReset();
+		}
+
+
 	}
 	return failed;
 }

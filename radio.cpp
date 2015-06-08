@@ -14,15 +14,19 @@ extern const AP_HAL::HAL& hal;
 
 void Radio::main() {
 	chibios_rt::BaseThread::setName("Radio");
-	return;
+
 	while(1) {
+		if(int_event.wait(1)) {
+			this->RH_RF22::handleInterrupt();
+		}
 
 		if (!transmitting()) {
 			if (rxDataLen) {
-				uint8_t* buf = rxBuf;
-				uint8_t len = rxDataLen;
 
 				noiseFloor = ((uint16_t) noiseFloor * 31 + rssiRead()) / 32;
+
+				uint8_t* buf = rxBuf;
+				uint8_t len = rxDataLen;
 
 				if (len >= sizeof(Packet)) {
 					Packet* inPkt = (Packet*) buf;
@@ -82,6 +86,7 @@ void Radio::main() {
 						if (radio_cfg.fhChannels)
 							setFHChannel((inPkt->seq ^ 0x55) % radio_cfg.fhChannels);
 
+						//dbgclr();
 						//printf("*\n");
 						sendAck(inPkt);
 
@@ -90,18 +95,21 @@ void Radio::main() {
 
 				rxDataLen = 0;
 			}
-
 			//XPCC_LOG_DEBUG .dump_buffer(buf, len);
-
 		}
 	}
 }
 
 bool Radio::init() {
-	if(!RH_RF22::init()) {
-		//hal.scheduler->panic("radio init failed");
-		return false;
+	if(!hwInitialized) {
+		if(!RH_RF22::HWinit()) {
+			hal.scheduler->panic("Radio init failed");
+			return false;
+		}
 	}
+	hwInitialized = true;
+
+	RH_RF22::init();
 
 	radio_cfg.frequency.load();
 	radio_cfg.modemCfg.load();
@@ -116,11 +124,14 @@ bool Radio::init() {
 	setModeRx();
 	XPCC_LOG_DEBUG .printf("Radio initialized (f:%d)\n", radio_cfg.frequency.get());
 
+	this->Thread::start(NORMALPRIO+1);
+
 	return true;
 }
 
 
 bool Radio::sendAck(Packet* inPkt) {
+
 	uint16_t txavail = txbuf.bytes_used();
 	Packet* out = (Packet*)txBuf;
 
@@ -188,10 +199,12 @@ void Radio::handleRxComplete() {
 			rxDataLen = 0;
 		}
 	}
+
+
 }
 
 void Radio::handleInterrupt() {
-	evt.signal();
+	int_event.signal();
 }
 
 void Radio::handleTxComplete() {
@@ -199,5 +212,5 @@ void Radio::handleTxComplete() {
 }
 
 void Radio::handleReset() {
-
+	XPCC_LOG_DEBUG .printf("RF22 Reset!\n");
 }

@@ -11,9 +11,9 @@ bool Semaphore::give() {
 }
 
 bool Semaphore::take(uint32_t timeout_ms) {
-	return sem.wait(ST2MS(timeout_ms)) == MSG_OK;
+	return sem.wait(MS2ST(timeout_ms)) == MSG_OK;
 }
 
 bool Semaphore::take_nonblocking() {
-	return sem.wait(0);
+	return sem.wait(TIME_IMMEDIATE) == MSG_OK;
 }

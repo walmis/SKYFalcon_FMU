@@ -50,13 +50,7 @@ public:
 	typedef chibios_rt::BaseStaticThread<512> Thread;
 
 	Radio() : RH_RF22(nRadioSel::Id, RadioIrq::Id),
-			BufferedIODevice(256, 256) {
-		dataLen = 0;
-		seq = 0;
-		//lastAckSeq = 0;
-		numRetries = 0;
-
-	}
+			BufferedIODevice(256, 256) {}
 
 	bool init();
 
@@ -122,11 +116,11 @@ protected:
 	void handleReset() override;
 	bool sendAck(Packet* inPkt);
 
-	xpcc::Event evt;
+	xpcc::Event int_event;
 
 	uint8_t txBuf[255];
-	uint8_t dataLen; //packet size
-	uint8_t dataPos;
+	uint8_t dataLen		= 0; //packet size
+	uint8_t dataPos		= 0;
 
 	uint8_t rxBuf[255];
 	volatile uint8_t rxDataLen;
@@ -134,11 +128,13 @@ protected:
 	//uint8_t lastAckSeq; //last acknowledged sequence number
 	//uint8_t lastSeq;
 
-	uint8_t noiseFloor;
-	uint8_t rssi;
+	uint8_t noiseFloor	= 0;
+	uint8_t rssi		= 0;
 
-	uint32_t numRetries;
-	uint8_t seq;
+	uint32_t numRetries	= 0;
+	uint8_t seq			= 0;
+
+	bool hwInitialized	= false;
 
     bool transmitting() {
     	return mode() == RHModeTx;

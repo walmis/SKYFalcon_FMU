@@ -40,10 +40,32 @@ void Scheduler::delay(uint16_t ms)
             	_delay_proc();
             }
         }
-
-        chibios_rt::BaseThread::sleepUntil(nextTimeout);
+        if(micros() < nextTimeout) {
+        	chibios_rt::BaseThread::sleepUntil(nextTimeout);
+        }
         ms--;
     }
+}
+
+static void restore_priority(void*) {
+	chibios_rt::System::lockFromIsr();
+	ch.mainthread.p_prio = NORMALPRIO;
+	ch.mainthread.p_realprio = NORMALPRIO;
+	chibios_rt::System::unlockFromIsr();
+}
+
+void Scheduler::delay_microseconds_boost(uint16_t us) {
+	static virtual_timer_t timer;
+
+	chibios_rt::System::lock();
+	ch.mainthread.p_prio = HIGHPRIO;
+	ch.mainthread.p_realprio = HIGHPRIO;
+	chibios_rt::System::unlock();
+
+	chibios_rt::BaseThread::sleep(us);
+
+	chVTSet(&timer, 150, restore_priority, (void*)0);
+	//chibios_rt::BaseThread::setPriority(NORMALPRIO);
 }
 
 void Scheduler::_timer_procs_timer_event()
@@ -62,11 +84,11 @@ void Scheduler::main() {
 	chibios_rt::BaseThread::setName("HALTimer");
 
 	while(1) {
-		uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
+		//uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
 
-		//xpcc::stm32::PB15::toggle();
+		//xpcc::stm32::PB15::set();
 		_run_timer_procs(false);
-
+		//xpcc::stm32::PB15::reset();
 		//synchronize on MPU6050 1khz DRDY
 		mpu6k_evt.wait(1);
 	}

@@ -1,6 +1,6 @@
 
 #include "RCInput.h"
-//#include <radio.hpp>
+#include "../radio.hpp"
 
 #define NUM_CHANNELS 16
 
@@ -22,10 +22,10 @@ void RCInput::init(void* machtnichts)
 #define RC_9 8
 
 bool RCInput::new_input() {
-//    if(radio.rcPacketTimestamp != last_read) {
-//    	return true;
-//    }
-//	return false;
+    if(radio.rcPacketTimestamp != last_read) {
+    	return true;
+    }
+	return false;
 }
 
 uint8_t RCInput::num_channels() {
@@ -34,20 +34,19 @@ uint8_t RCInput::num_channels() {
 
 uint16_t RCInput::read(uint8_t ch) {
 
-//	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 500) {
-//		radio.rcData.channels[RC_ROLL] = 1500;
-//		radio.rcData.channels[RC_PITCH] = 1500;
-//		radio.rcData.channels[RC_YAW] = 1500;
-//	}
-//
-//
-//	last_read = radio.rcPacketTimestamp;
-//
-//	if(ch >= NUM_CHANNELS) {
-//		return 0;
-//	}
-//
-//	return radio.rcData.channels[ch];
+	if(xpcc::Clock::now() - radio.rcPacketTimestamp > 500) {
+		radio.rcData.channels[RC_ROLL] = 1500;
+		radio.rcData.channels[RC_PITCH] = 1500;
+		radio.rcData.channels[RC_YAW] = 1500;
+	}
+
+	last_read = radio.rcPacketTimestamp;
+
+	if(ch >= NUM_CHANNELS) {
+		return 0;
+	}
+
+	return radio.rcData.channels[ch];
 }
 
 uint8_t RCInput::read(uint16_t* periods, uint8_t len) {

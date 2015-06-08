@@ -44,11 +44,11 @@ void rh_yield() {
 chibios_rt::Mutex mtx;
 
 void rh_atomic_block_start() {
-	//mtx.lock();
+	mtx.lock();
 }
 
 void rh_atomic_block_end() {
-	//mtx.unlock();
+	mtx.unlock();
 }
 
 //uint32_t millis() {

@@ -45,7 +45,7 @@ public:
 
     uint8_t lockup_count();
 
-    AP_HAL::Semaphore* get_semaphore() { return _semaphore; }
+    AP_HAL::Semaphore* get_semaphore();
 
 private:
 
