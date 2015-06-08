@@ -6,14 +6,14 @@
 #include <xpcc/architecture.hpp>
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 
-class I2CHandle : public xpcc::I2cWriteReadAdapter {
+class I2CHandle : public xpcc::I2cWriteReadTransaction {
 public:
 	 AP_HAL::MemberProc callback;
 
 	 void stopped(DetachCause cause) override;
 };
 
-class XpccHAL::I2CDriver : public AP_HAL::I2CDriver, xpcc::I2cWriteReadAdapter {
+class XpccHAL::I2CDriver : public AP_HAL::I2CDriver, xpcc::I2cWriteReadTransaction {
 public:
     I2CDriver(AP_HAL::Semaphore* semaphore) : _semaphore(semaphore), error_count(0) {}
     void begin();
@@ -48,6 +48,9 @@ public:
     AP_HAL::Semaphore* get_semaphore() { return _semaphore; }
 
 private:
+
+    bool startTransaction();
+
     AP_HAL::Semaphore* _semaphore;
 
     uint8_t error_count;

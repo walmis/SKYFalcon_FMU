@@ -5,10 +5,9 @@ using namespace XpccHAL;
 
 #include <xpcc/architecture.hpp>
 #include <AP_HAL.h>
+#include <pindefs.hpp>
 
 extern const AP_HAL::HAL& hal;
-
-
 
 GPIO::GPIO()
 {}
@@ -18,21 +17,62 @@ void GPIO::init()
 
 void GPIO::pinMode(uint8_t pin, uint8_t output)
 {
+	//special pins
+	if((pin>>4) == 0x0F) {
+		return;
+	}
+
 
 }
 
 int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
 {
+	switch(pin) {
+	case 10:
+		return xpcc::stm32::PC0::Id;
+	case 11:
+		return xpcc::stm32::PC1::Id;
+	case 12:
+		return xpcc::stm32::PC2::Id;
+	case 13:
+		return xpcc::stm32::PC3::Id;
+	case 14:
+		return xpcc::stm32::PC4::Id;
+	case 15:
+		return xpcc::stm32::PC5::Id;
+	}
 
+	return -1;
 }
 
 
 uint8_t GPIO::read(uint8_t pin) {
+	//handle LEDs
+	if(pin == 0xFF) {
 
+	}
+	if(pin == 0xFE) {
+
+	}
+	if(pin == 0xFD) {
+
+	}
+	/////
 }
 
 void GPIO::write(uint8_t pin, uint8_t value)
 {
+	//handle LEDs
+	if(pin == 0xFF) {
+
+	}
+	if(pin == 0xFE) {
+
+	}
+	if(pin == 0xFD) {
+
+	}
+	/////
 
 }
 

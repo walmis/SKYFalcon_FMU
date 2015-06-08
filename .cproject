@@ -64,7 +64,7 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.noinlinefunctions.2142014117" name="Do not inline functions (-fno-inline-functions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.noinlinefunctions"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.freestanding.5737592" name="Assume freestanding environment (-ffreestanding)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.freestanding" value="true" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nobuiltin.426235477" name="Disable builtin (-fno-builtin)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nobuiltin"/>
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.spconstant.1203880223" name="Single precision constants (-fsingle-precision-constant)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.spconstant"/>
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.spconstant.1203880223" name="Single precision constants (-fsingle-precision-constant)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.spconstant" value="false" valueType="boolean"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.PIC.468106564" name="Position independent code (-fPIC)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.PIC"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.lto.787952456" name="Link-time optimizer (-flto)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.lto"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nomoveloopinvariants.1700015780" name="Disable loop invariant move (-fno-move-loop-invariants)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.nomoveloopinvariants"/>
@@ -87,7 +87,7 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.agreggatereturn.1784683520" name="Warn if struct is returned (-Wagreggate-return)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.agreggatereturn"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.floatequal.2041710812" name="Warn if floats are compared as equal (-Wfloat-equal)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.floatequal"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.toerrors.1003878403" name="Generate errors instead of warnings (-Werror)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.toerrors"/>
-							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.other.999010260" name="Other warning flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.other"/>
+							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.other.999010260" name="Other warning flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.warnings.other" value="-Wdouble-promotion" valueType="string"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level.722667247" name="Debug level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.level"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format.323385395" name="Debug format" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.format"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.prof.2085589067" name="Generate prof information (-p)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.prof"/>
@@ -102,6 +102,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Device/ST/STM32F4xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/SKYFalcon_FMU/ChibiOS/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/chibiRTOS/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/src/xpcc/architecture/platform/cortex_m3/stm32/stm32f4/chibi}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.2108739024" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1643438892" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
@@ -111,12 +114,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/lpc17xx/cmsis}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/lpc17xx/driver/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/cmsis/stm32/Device/ST/STM32F4xx/Include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/chibiRTOS/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/src/xpcc/architecture/platform/cortex_m3/stm32/stm32f4/chibi}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1208820910" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -203,17 +206,24 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Menu}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Limits}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_Relay}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/ext/chibiRTOS/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/src/xpcc/architecture/platform/cortex_m3/stm32/stm32f4/chibi}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduCopter}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/AP_LandingGear}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.1649915261" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
 									<listOptionValue builtIn="false" value="STM32F4XX"/>
 									<listOptionValue builtIn="false" value="__ARM_STM32__"/>
-									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_XPCC"/>
+									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_SKYFALCON"/>
+									<listOptionValue builtIn="false" value="APM_BUILD_DIRECTORY=APM_BUILD_ArduCopter"/>
+									<listOptionValue builtIn="false" value="EKF_BUILD=1"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti.1874264488" name="Do not use RTTI (-fno-rtti)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.315948386" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nousecxaatexit.70352120" name="Do not use _cxa_atexit() (-fno-use-cxa-atexit)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nousecxaatexit" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nothreadsafestatics.451231056" name="Do not use thread-safe statics (-fno-threadsafe-statics)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nothreadsafestatics" useByScannerDiscovery="true" value="true" valueType="boolean"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.other.1032077126" name="Other compiler flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.other" useByScannerDiscovery="true" value="" valueType="string"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1212805060" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1451341408" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
@@ -222,15 +232,18 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker.1095350417" name="Cross ARM C++ Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.linker">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs.1141657351" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="RadioHead"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="ArduCopter"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="APMLib"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="xpcc"/>
 									<listOptionValue builtIn="false" value="m"/>
 									<listOptionValue builtIn="false" value="stdc++"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths.272016874" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead/Cortex-M4F}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/Cortex-M4F}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead/Release}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/xpcc/STM32F4}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/RadioHead/Cortex-M4F}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduCopter/Cortex-M4F}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/APMLib/Cortex-M4F}&quot;"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections.1637698834" name="Remove unused sections (-Xlinker --gc-sections)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.gcsections" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile.2050651248" name="Script files (-T)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.linker.scriptfile" valueType="stringList">
@@ -256,7 +269,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="RadioHead/STM32ArduinoCompat|xpcc/src/xpcc/architecture/board|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBHID|types.h|xpcc/src/xpcc/driver/gpio|xpcc/src/xpcc/driver/pwm|timer.h|xpcc/src/xpcc/workflow/rtos|usb_serial.c|serial_fifo.h|debug.c|xpcc/src/xpcc/driver/adc|Radio.h|xpcc/src/xpcc/driver/connectivity|Radio.cpp|sys/syscalls.c|USBDevice/USBMIDI|xpcc/src/xpcc/architecture/platform/avr32|xpcc/src/xpcc/debug/logger/hosted|xpcc/examples|usb|xpcc/tools|usb/USBSerial.cpp|debug.h|xpcc/src/xpcc/driver/storage|liblpcxx|USBDevice/USBAudio|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBDevice/USBHAL_KL25Z.cpp|xpcc/scons|xpcc/src/xpcc/architecture/platform/hosted|serial_fifo.c|usb_serial.h|xpcc/src/xpcc/communication/backend|xpcc/src/xpcc/driver/temperature|xpcc/src/xpcc/driver/other|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/startup|xpcc/src/xpcc/driver/time|xpcc/doc|xpcc/src/xpcc/architecture/platform/avr|xpcc/templates|xpcc/src/unittest|xpcc/release|xpcc/src/xpcc/driver/dac|xpcc/ext|xpcc/tests|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBDevice/USBHAL_LPC11U.cpp|xpcc/src/xpcc/architecture/platform/cortex_m0|USBDevice/USBHID|xpcc/src/xpcc/architecture/platform/cortex_m3/stm32|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBAudio|USBDevice/USBMSD|timer.c|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBMSD|sys/strtol.c|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBMIDI|sys/LPC1xxx_startup.c|xpcc/src/xpcc/driver/inertial|xpcc/src/xpcc/driver/pressure|xpcc/src/xpcc/architecture/platform/arm7|xpcc/src/xpcc/driver/ui|mbed|hid_test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBDevice/USBHAL_LPC11U.cpp|timer.c|xpcc/src/xpcc/driver/ui|xpcc/src/xpcc/driver/connectivity|usb_serial.c|xpcc/ext|xpcc/scons|liblpcxx|xpcc/tests|xpcc/src/xpcc/driver/dac|xpcc/src/xpcc/architecture/platform/arm7|xpcc/src/xpcc/driver/pwm|xpcc/src/xpcc/architecture/platform/avr|xpcc/tools|xpcc/src/xpcc/debug/logger/hosted|xpcc/examples|xpcc/src/xpcc/workflow/rtos|xpcc/src/xpcc/driver/temperature|sys/syscalls.c|sys/strtol.c|RadioHead/STM32ArduinoCompat|xpcc/src/unittest|xpcc/src/xpcc/driver/pressure|xpcc/src/xpcc/driver/time|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBAudio|xpcc/src/xpcc/driver/gpio|USBDevice/USBMSD|xpcc/templates|debug.h|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBDevice/USBHAL_KL25Z.cpp|xpcc/src/xpcc/driver/other|xpcc/src/xpcc/architecture/platform/cortex_m0|xpcc/src/xpcc/architecture/platform/avr32|xpcc/src/xpcc/driver/inertial|xpcc/src/xpcc/driver/adc|usb_serial.h|usb|Radio.cpp|xpcc/src/xpcc/architecture/board|debug.c|xpcc/src/xpcc/driver/storage|usb/USBSerial.cpp|serial_fifo.h|mbed|xpcc/src/xpcc/communication/backend|xpcc/release|USBDevice/USBAudio|USBDevice/USBHID|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBMSD|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBMIDI|timer.h|Chibi/ports/ARMCMx/cmsis_os/cmsis_os.c|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/startup|xpcc/doc|hid_test.c|serial_fifo.c|xpcc/src/xpcc/architecture/platform/cortex_m3/stm32|sys/LPC1xxx_startup.c|Radio.h|USBDevice/USBMIDI|xpcc/src/xpcc/architecture/platform/hosted|types.h|xpcc/src/xpcc/architecture/platform/cortex_m3/lpc/USBDevice/USBHID" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -272,7 +285,7 @@
 						<entry flags="RESOLVED" kind="libraryFile" name="xpcc" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
-				<externalSettings containerId="APMLib;cdt.managedbuild.config.gnu.cross.exe.release.1354711777.455808150" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+				<externalSettings containerId="APMLib;cdt.managedbuild.config.gnu.cross.exe.release.1354711777.2018298286" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/APMLib"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/APMLib/Cortex-M4F"/>
@@ -284,6 +297,16 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/RadioHead"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RadioHead/Cortex-M4F"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="RadioHead" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="ArduCopter;cdt.managedbuild.config.gnu.cross.exe.release.1354711777" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/RadioHead"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/APMLib"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/RadioHead/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/APMLib/Release"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="RadioHead" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="APMLib" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>

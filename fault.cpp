@@ -83,7 +83,9 @@ void HardFault_HandlerC(unsigned long *hardfault_args){
   // Bus Fault Address Register
   _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
 
-  __asm("BKPT #0\n") ; // Break into the debugger
+  asm volatile("bkpt 0");
+
+  //NVIC_SystemReset();
 }
 
 extern "C" __attribute((naked)) void HardFault_Handler(void)

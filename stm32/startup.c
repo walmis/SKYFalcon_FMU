@@ -156,12 +156,12 @@ void FPU_IRQHandler(void)			__attribute__ ((weak, alias("defaultHandler")));
 typedef void (* const FunctionPointer)(void);
 
 // defined in the linkerscript
-extern uint32_t __stack_end;
+extern uint32_t __main_stack_end__;
 
 
 const void *vectors[] SECTION(".irq_vectors") =
 {
-	&__stack_end,	// stack pointer
+	&__main_stack_end__,	// stack pointer
 	Reset_Handler,				// code entry point
 	NMI_Handler,				// NMI handler
 	HardFault_Handler,			// hard fault handler
@@ -269,12 +269,12 @@ extern uint32_t __fastcode_load;
 extern uint32_t __fastcode_start;
 extern uint32_t __fastcode_end;
 
-extern uint32_t __data_load;
-extern uint32_t __data_start;
-extern uint32_t __data_end;
+extern uint32_t _textdata;
+extern uint32_t _data;
+extern uint32_t _edata;
 
-extern uint32_t __bss_start;
-extern uint32_t __bss_end;
+extern uint32_t _bss_start;
+extern uint32_t _bss_end;
 
 // Application's main function
 extern int main(void);
@@ -303,10 +303,7 @@ inline __attribute__((always_inline)) void __ctors_init() {
       __init_array_start[i] ();
 }
 
-// ----------------------------------------------------------------------------
-void
-Reset_Handler(void)
-{
+void __early_init() {
 	//boot flag is set
 	if(RTC->BKP0R & (1<<31)) {
 
@@ -315,30 +312,6 @@ Reset_Handler(void)
 	}
 
 	SystemInit();
-
-	// Copy functions to RAM (.fastcode)
-	uint32_t* src = &__fastcode_load;
-	uint32_t* dest = &__fastcode_start;
-	while (dest < &__fastcode_end)
-	{
-		*(dest++) = *(src++);
-	}
-
-	// Copy the data segment initializers from flash to RAM (.data)
-	src = &__data_load;
-	dest = &__data_start;
-	while (dest < &__data_end)
-	{
-		*(dest++) = *(src++);
-	}
-
-	// Fill the bss segment with zero (.bss)
-	dest = &__bss_start;
-	while (dest < &__bss_end)
-	{
-		*(dest++) = 0;
-	}
-
 
 	// prepare flash latency for working at 168MHz and supply voltage > 2.7
 	//FLASH->ACR = (FLASH->ACR & ~FLASH_ACR_LATENCY) | FLASH_WAIT_STATE_5;
@@ -390,19 +363,68 @@ Reset_Handler(void)
 			SCB_SHCSR_USGFAULTENA_Msk |
 			SCB_SHCSR_MEMFAULTENA_Msk;*/
 
+
+}
+
+extern void port_timer_init();
+
+void __late_init() {
 	SystemCoreClockUpdate();
+	port_timer_init();
+	chSysInit();
+}
+
+void __default_exit() {}
+
+#if 0
+// ----------------------------------------------------------------------------
+void
+Reset_Handler(void)
+{
+
+	__early_init();
+
+	// Copy functions to RAM (.fastcode)
+	uint32_t* src = &__fastcode_load;
+	uint32_t* dest = &__fastcode_start;
+	while (dest < &__fastcode_end)
+	{
+		*(dest++) = *(src++);
+	}
+
+	// Copy the data segment initializers from flash to RAM (.data)
+	src = &_textdata;
+	dest = &_data;
+	while (dest < &_edata)
+	{
+		*(dest++) = *(src++);
+	}
+
+	// Fill the bss segment with zero (.bss)
+	dest = &_bss_start;
+	while (dest < &_bss_end)
+	{
+		*(dest++) = 0;
+	}
+
+	__late_init();
 
 	// Call CTORS of static objects
 	__ctors_init();
 
-	// Call the application's entry point
+
+
 	main();
+
+
+	// Call the application's entry point
+
 
 	while (1)
 	{
 	}
 }
-
+#endif
 // ----------------------------------------------------------------------------
 /**
  * @brief	Default interrupt handler

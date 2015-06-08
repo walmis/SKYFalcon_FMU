@@ -3,9 +3,13 @@
 #include "Storage.h"
 //#include <eeprom/eeprom.hpp>
 #include <xpcc/architecture.hpp>
+#include <xpcc/driver/storage/i2c_eeprom.hpp>
 using namespace XpccHAL;
+using namespace xpcc;
 
 extern const AP_HAL::HAL& hal;
+
+I2cEeprom<xpcc::stm32::I2cMaster1> eeprom(0x50, 2, 32);
 
 Storage::Storage()
 {
@@ -14,25 +18,27 @@ Storage::Storage()
 void Storage::init(void*)
 {
 //	eeprom.waitAvailable(20);
+	//eeprom.isAvailable()
 }
 
-//we are not using semaphore here because eeprom driver uses a
-//different i2c delegate than i2cdriver
-//and the i2c driver sorts everything out
 void Storage::read_block(void* dst, uint16_t src, size_t n) {
 //	if(xpcc::isInterruptContext()) {
 //		hal.scheduler->panic("PANIC: eeprom read from ISR\n");
 //	}
-//	if(!eeprom.read(src, (uint8_t*)dst, n)) {
-//		hal.scheduler->panic("PANIC: Eeprom read failed\n");
-//	}
+	//XPCC_LOG_DEBUG .printf("r %d %d\n", src, n);
+	if(!eeprom.read(src, (uint8_t*)dst, n)) {
+		//hal.scheduler->panic("PANIC: Eeprom read failed\n");
+		XPCC_LOG_DEBUG .printf("EEPROM read failed (addr %d)\n", src);
+	}
 }
 
 void Storage::write_block(uint16_t loc, const void* src, size_t n)
 {
-//	if(!eeprom.write(loc, (uint8_t*)src, n)) {
-//		hal.scheduler->panic("PANIC: Eeprom write failed\n");
-//	}
+	//XPCC_LOG_DEBUG .printf("w %d %d\n", loc, n);
+	if(!eeprom.write(loc, (uint8_t*)src, n)) {
+		//hal.scheduler->panic("PANIC: Eeprom write failed\n");
+		XPCC_LOG_DEBUG .printf("EEPROM write failed\n");
+	}
 //	uint8_t buf[n];
 //	memset(buf, 0, n);
 //	read_block((void*)buf, loc, n);

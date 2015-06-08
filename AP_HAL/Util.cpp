@@ -10,11 +10,11 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-extern "C" uint8_t __heap_end;
+extern "C" uint8_t __heap_end__;
 
 uint16_t XpccHAL::Util::available_memory(void) {
 
-	return &__heap_end - (uint8_t*)sbrk(0);
+	return &__heap_end__ - (uint8_t*)sbrk(0);
 }
 
 void XpccHAL::Util::set_system_clock(uint64_t time_utc_usec)  {

@@ -63,12 +63,14 @@ public:
 
     bool NeedErase(void);
     void EraseAll() {}
-    void ReadBlock(void *pkt, uint16_t size) {};
+    bool ReadBlock(void *pkt, uint16_t size) {
+    	return false;
+    };
 
 protected:
     xpcc::fat::File *file;
     xpcc::fat::File *read_file;
-    xpcc::CoopTask<DataWriter, 512> writer;
+    DataWriter writer;
 
     uint16_t last_log;
     uint16_t num_logs;

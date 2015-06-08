@@ -3,18 +3,17 @@
 #define __AP_HAL_EMPTY_SEMAPHORE_H__
 
 #include "AP_HAL_XPCC.h"
+#include <xpcc/processing/rtos.hpp>
 
 class XpccHAL::Semaphore final : public AP_HAL::Semaphore {
 public:
-    Semaphore() : _taken(false) {}
+    Semaphore() : sem(false) {}
     bool give();
     bool take(uint32_t timeout_ms);
     bool take_nonblocking();
 private:
 
-    volatile bool _taken;
-    bool _take_from_mainloop(uint32_t timeout_ms);
-    bool _take_nonblocking();
+    chibios_rt::BinarySemaphore sem;
 };
 
 #endif // __AP_HAL_EMPTY_SEMAPHORE_H__

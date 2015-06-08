@@ -1,6 +1,5 @@
 
 #include <AP_HAL.h>
-#if CONFIG_HAL_BOARD == HAL_BOARD_XPCC
 
 #include "HAL_XPCC_Class.h"
 #include "AP_HAL_Empty_Private.h"
@@ -58,4 +57,3 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
 
 const HAL_XPCC AP_HAL_XPCC;
 
-#endif

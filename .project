@@ -6,6 +6,7 @@
 		<project>xpcc</project>
 		<project>APMLib</project>
 		<project>RadioHead</project>
+		<project>ArduCopter</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

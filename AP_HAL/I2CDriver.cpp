@@ -8,7 +8,7 @@ using namespace XpccHAL;
 extern const AP_HAL::HAL& hal;
 
 void I2CDriver::begin() {
-	hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
+	//hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
 }
 
 void I2CDriver::end() {}
@@ -19,22 +19,37 @@ void I2CDriver::setHighSpeed(bool active) {}
 #define I2C xpcc::stm32::I2cMaster1
 extern const AP_HAL::HAL& hal;
 
+bool I2CDriver::startTransaction() {
+	if(!I2C::start(this)) {
+		XPCC_LOG_DEBUG << "e1";
+		error_count++;
+		return 1;
+	}
+
+	if(!wait(100)) {
+		XPCC_LOG_DEBUG .printf("i2c Timeout (%d)\n", getState());
+		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::reset(this));
+
+		error_count++;
+		return 1;
+	}
+
+	bool failed = getState() != xpcc::I2cWriteReadTransaction::AdapterState::Idle;
+	if(failed)  {
+		error_count++;
+		XPCC_LOG_DEBUG << "e3";
+	}
+	return failed;
+}
+
 uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
 {
 	if(!initialize(addr, data, len, 0, 0)) {
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+
+	return startTransaction();
 }
 uint8_t I2CDriver::writeRegister(uint8_t addr, uint8_t reg, uint8_t val)
 {
@@ -45,16 +60,7 @@ uint8_t I2CDriver::writeRegister(uint8_t addr, uint8_t reg, uint8_t val)
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+	return startTransaction();
 }
 uint8_t I2CDriver::writeRegisters(uint8_t addr, uint8_t reg,
                                uint8_t len, uint8_t* data)
@@ -67,16 +73,7 @@ uint8_t I2CDriver::writeRegisters(uint8_t addr, uint8_t reg,
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+	return startTransaction();
 }
 
 uint8_t I2CDriver::read(uint8_t addr, uint8_t len, uint8_t* data)
@@ -85,16 +82,7 @@ uint8_t I2CDriver::read(uint8_t addr, uint8_t len, uint8_t* data)
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+	return startTransaction();
 }
 
 uint8_t I2CDriver::readRegister(uint8_t addr, uint8_t reg, uint8_t* data)
@@ -103,16 +91,7 @@ uint8_t I2CDriver::readRegister(uint8_t addr, uint8_t reg, uint8_t* data)
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+	return startTransaction();
 }
 
 uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
@@ -120,20 +99,13 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 {
 	if(!len) return 1;
 
+	//I2cWriteReadTransaction transaction;
+
 	if(!initialize(addr, &reg, 1, data, len)) {
 		error_count++;
 		return 1;
 	}
-	if(!I2C::start(this)) {
-		error_count++;
-		return 1;
-	}
-	while(getState() == xpcc::I2cWriteReadAdapter::AdapterState::Busy) {
-		xpcc::yield();
-	}
-	bool failed = getState() != xpcc::I2cWriteReadAdapter::AdapterState::Idle;
-	if(failed) error_count++;
-	return failed;
+	return startTransaction();
 }
 
 void I2CHandle::stopped(DetachCause cause) {
@@ -143,7 +115,7 @@ void I2CHandle::stopped(DetachCause cause) {
 		callback = 0;
 	}
 
-	I2cWriteReadAdapter::stopped(cause);
+	I2cWriteReadTransaction::stopped(cause);
 }
 
 I2CHandle* I2CDriver::readNonblocking(uint8_t addr, uint8_t reg,
@@ -203,3 +175,4 @@ void I2CDriver::watchdog() {
 uint8_t I2CDriver::lockup_count() {
 	return error_count;
 }
+

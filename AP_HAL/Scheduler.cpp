@@ -1,7 +1,7 @@
 #include <xpcc/architecture.hpp>
 #include "Scheduler.h"
 #include "AnalogIn.h"
-//#include "../pindefs.hpp"
+#include "../pindefs.hpp"
 
 using namespace XpccHAL;
 
@@ -19,41 +19,36 @@ Scheduler::Scheduler()
 
 void Scheduler::init(void* machtnichts)
 {
-	xpcc::stm32::SysTickTimer::attachInterrupt(Scheduler::_timer_procs_timer_event);
+	MpuInt::attachInterrupt([this]() {
+		mpu6k_evt.signal();
+	}, xpcc::IntEdge::RISING_EDGE);
 
-	//TIM5 counts microseconds
-	xpcc::stm32::GPTimer5::enable();
-	xpcc::stm32::GPTimer5::setPrescaler(SystemCoreClock / 2000000);
-	xpcc::stm32::GPTimer5::applyAndReset();
-	xpcc::stm32::GPTimer5::start();
-	//////
+	Thread::start(HIGHPRIO-1);
 
 	_timer_proc_enabled = true;
 }
 
 void Scheduler::delay(uint16_t ms)
 {
+
 	uint32_t start = micros();
     while (ms > 0) {
+    	uint32_t nextTimeout = micros() + 1000;
+
         if (_min_delay_cb_ms <= ms) {
             if (_delay_proc) {
             	_delay_proc();
             }
         }
-    	while ((micros() - start) >= 1000) {
-            ms--;
-            xpcc::yield();
-            if (ms == 0) break;
-            start += 1000;
-        }
 
-        xpcc::yield();
+        chibios_rt::BaseThread::sleepUntil(nextTimeout);
+        ms--;
     }
 }
 
 void Scheduler::_timer_procs_timer_event()
 {
-	_run_timer_procs(true);
+
 }
 //uint64_t Scheduler::millis64() {
 //    return 10000;
@@ -63,20 +58,39 @@ void Scheduler::_timer_procs_timer_event()
 //    return 200000;
 //}
 
+void Scheduler::main() {
+	chibios_rt::BaseThread::setName("HALTimer");
+
+	while(1) {
+		uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
+
+		//xpcc::stm32::PB15::toggle();
+		_run_timer_procs(false);
+
+		//synchronize on MPU6050 1khz DRDY
+		mpu6k_evt.wait(1);
+	}
+}
+
 uint32_t Scheduler::millis() {
     return xpcc::Clock::now().getTime();
 }
 
 uint32_t Scheduler::micros() {
-    return xpcc::stm32::GPTimer5::getValue();
+    return chibios_rt::System::getTimeX();
+}
+
+uint64_t Scheduler::millis64() {
+    return xpcc::Clock::now().getTime();
+}
+
+uint64_t Scheduler::micros64() {
+    return chibios_rt::System::getTimeX();
 }
 
 void Scheduler::delay_microseconds(uint16_t us)
 {
-	uint32_t m = micros() + us;
-	while(micros() < m) {
-		xpcc::yield();
-	}
+	chibios_rt::BaseThread::sleep(us);
 }
 
 void Scheduler::register_delay_callback(AP_HAL::Proc k,
@@ -138,7 +152,7 @@ void Scheduler::_run_timer_procs(bool called_from_isr)
     if (_timer_proc_enabled) {
         // now call the timer based drivers
         for (int i = last_proc_id; i < _num_timer_procs; i++) {
-            if (_timer_proc[i] != NULL) {
+            if (_timer_proc[i]) {
                 _timer_proc[i]();
             }
         }
@@ -200,5 +214,5 @@ void Scheduler::reboot(bool hold_in_bootloader) {
 }
 
 void Scheduler::yield() {
-	xpcc::yield();
+	chThdYield();
 }

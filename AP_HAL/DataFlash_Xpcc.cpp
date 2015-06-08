@@ -11,6 +11,7 @@
 
 #include "DataFlash_Xpcc.h"
 #include <xpcc/architecture.hpp>
+#include <xpcc/processing.hpp>
 #include <fatfs/diskio.h>
 #include <fatfs/ff.h>
 

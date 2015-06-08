@@ -23,6 +23,7 @@ AnalogSource::AnalogSource(int16_t chan, AnalogIn* parent) : _chan(-1), _chan_id
 
 void AnalogSource::set_pin(uint8_t p)
 {
+	if(p == 255) return;
 	XPCC_LOG_DEBUG .printf("adding adc channel %d\n", p);
 	//register channel with ADC
 	if(_chan_idx == -1) {
@@ -112,7 +113,8 @@ void AnalogIn::init(void* machtnichts)
 			->periphBaseAddress((uint32_t)&ADC1->DR)
 			->xferDirection(dma::XferDir::PeripheralToMemory)
 			->memory0BaseAddress((uint32_t)&samples[0])
-			->fifoMode(dma::FIFOMode::Disable);
+			->fifoMode(dma::FIFOMode::Disable)
+			->priority(dma::Prioriy::Low);
 
 	vref = channel((uint8_t)Adc1::Channel::InternalReference); //samples[0]
 	vdd = channel((uint8_t)Adc1::Channel::BatDiv2); //samples[1]
@@ -121,7 +123,7 @@ void AnalogIn::init(void* machtnichts)
 
 	Adc1::setScanMode(true);
 
-	hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&AnalogIn::_tick));
+	hal.scheduler->register_timer_process(FUNCTOR_BIND_MEMBER(&AnalogIn::_tick, void));
 }
 
 void AnalogIn::_tick()

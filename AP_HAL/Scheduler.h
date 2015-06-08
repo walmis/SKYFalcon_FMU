@@ -6,15 +6,19 @@
 
 #define MAX_TIMER_PROCS 4
 
-class XpccHAL::Scheduler final : public AP_HAL::Scheduler {
+class XpccHAL::Scheduler final : public AP_HAL::Scheduler,
+	chibios_rt::BaseStaticThread<512> {
+
+	typedef chibios_rt::BaseStaticThread<512> Thread;
 public:
     Scheduler();
     void     init(void* machtnichts);
     void     delay(uint16_t ms);
     uint32_t millis();
     uint32_t micros();
-    //uint64_t millis64();
-   // uint64_t micros64();
+    uint64_t millis64();
+    uint64_t micros64();
+
     void     delay_microseconds(uint16_t us);
     void     register_delay_callback(AP_HAL::Proc,
                 uint16_t min_time_ms);
@@ -40,6 +44,12 @@ public:
     void	 yield();
 
 private:
+
+    xpcc::Event mpu6k_evt;
+
+    //timer thread
+    void main();
+
     AP_HAL::Proc volatile _delay_proc;
     volatile uint16_t _min_delay_cb_ms;
 

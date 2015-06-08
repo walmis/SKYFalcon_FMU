@@ -1,10 +1,11 @@
 
 #include <xpcc/architecture.hpp>
-
 #include <wirish.h>
 #include <RHGenericSPI.h>
 #include <stdarg.h>
+#include "pindefs.hpp"
 
+using namespace xpcc::stm32;
 
 int printf(const char* fmt, ...) {
 	va_list ap;
@@ -40,12 +41,14 @@ void rh_yield() {
 	//xpcc::TickerTask::yield();
 }
 
+chibios_rt::Mutex mtx;
+
 void rh_atomic_block_start() {
-//	xpcc::GpioInt::disableInterrupts();
+	//mtx.lock();
 }
 
 void rh_atomic_block_end() {
-//	xpcc::GpioInt::enableInterrupts();
+	//mtx.unlock();
 }
 
 //uint32_t millis() {
@@ -54,28 +57,12 @@ void rh_atomic_block_end() {
 
 void pinMode(uint8_t pin, WiringPinMode mode) {
 
-//	LPC_GPIO_TypeDef* g = 0;
-	uint8_t p = pin & 0x1F;
-	switch(pin>>5) {
-	case 0:
-//		g = LPC_GPIO0;
-		break;
-	case 1:
-//		g = LPC_GPIO1;
-		break;
-	case 2:
-//		g = LPC_GPIO2;
-		break;
-	default:
-		return;
-	}
-
 	switch(mode) {
 	case WiringPinMode::OUTPUT:
-//		g->FIODIR |= (1<<p);
+		_GpioPin::setOutput(IDToPort(pin), IDToPin(pin));
 		break;
 	case WiringPinMode::INPUT:
-//		g->FIODIR &= ~(1<<p);
+		_GpioPin::setInput(IDToPort(pin), IDToPin(pin));
 		break;
 	default:
 		return;
@@ -83,38 +70,15 @@ void pinMode(uint8_t pin, WiringPinMode mode) {
 }
 
 void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
-
-//	xpcc::GpioInt::attach(pin>>5, pin&0x1F,
-//			fn, xpcc::IntEdge::FALLING_EDGE);
-
+	_GpioPin::attachInterrupt(IDToPort(pin), IDToPin(pin), fn, xpcc::IntEdge::FALLING_EDGE);
 }
 
-
 void digitalWrite(uint8_t pin, uint8_t val) {
-//	uint8_t p = pin&0x1F;
-//	switch(pin>>5) {
-//	case 0:
-//		val ? LPC_GPIO0->FIOSET|=(1<<p):LPC_GPIO0->FIOCLR|=(1<<p);
-//		break;
-//	case 1:
-//		val ? LPC_GPIO1->FIOSET|=(1<<p):LPC_GPIO1->FIOCLR|=(1<<p);
-//		break;
-//	case 2:
-//		val ? LPC_GPIO2->FIOSET|=(1<<p):LPC_GPIO2->FIOCLR|=(1<<p);
-//		break;
-//	}
+	_GpioPin::set(IDToPort(pin), IDToPin(pin), val);
 }
 
 uint8_t digitalRead(uint8_t pin) {
-//	uint8_t p = pin&0x1F;
-//	switch(pin>>5) {
-//	case 0:
-//		return (LPC_GPIO0->FIOPIN & (1<<p)) != 0;
-//	case 1:
-//		return (LPC_GPIO1->FIOPIN & (1<<p)) != 0;
-//	case 2:
-//		return (LPC_GPIO2->FIOPIN & (1<<p)) != 0;
-//	}
+	_GpioPin::read(IDToPort(pin), IDToPin(pin));
 	return 0;
 }
 
@@ -125,8 +89,11 @@ public:
 	void end() {}
 
 	uint8_t transfer(uint8_t data) {
-		//printf("spi write %02x\n", data);
-//		return radioSpiMaster::write(data);
+		radioSpiMaster::write(data);
+		while(!radioSpiMaster::isReceiveRegisterNotEmpty());
+		uint16_t ret;
+		radioSpiMaster::read(ret);
+		return ret;
 	}
 };
 

@@ -8,9 +8,10 @@ MEMORY
 {
 
 	FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 512k
-    RAM (rwx)     : ORIGIN = 0x20000000, LENGTH = 32k	/* Main internal SRAM1 */
+    RAM (rwx)     : ORIGIN = 0x20000000, LENGTH = 128k	
     AUX_RAM (rwx) : ORIGIN = 0x2001C000, LENGTH = 16k	/* Auxiliary internal SRAM2 */  
-    CCM (rwx)     : ORIGIN = 0x10000000, LENGTH = 64k  /* Core Coupled Memory, can only be accessed by the CPU */
+    
+    /*RAM2 (rwx)     : ORIGIN = 0x20000000, LENGTH = 64k  *//* Core Coupled Memory, can only be accessed by the CPU */
 }
 
 ENTRY(Reset_Handler)
@@ -24,19 +25,27 @@ EXTERN(xpccFloat)
 
 RAM_top = ORIGIN(RAM) + LENGTH(RAM);
 
-/* Used for interrupt handlers */
-HANDLER_STACK_SIZE = 0;
-
-/* Used during normal program execution */
-THREAD_STACK_SIZE = 2048;
+MAIN_STACK_SIZE = 2048;
+PROCESS_STACK_SIZE = 8192;
 
 PROVIDE(__ram_start = ORIGIN(RAM));
 PROVIDE(__flash_start = ORIGIN(FLASH));
 PROVIDE(__ram_end   = ORIGIN(RAM) + LENGTH(RAM));
-PROVIDE(__heap_end  = ORIGIN(RAM) + LENGTH(RAM) - THREAD_STACK_SIZE - HANDLER_STACK_SIZE);
-PROVIDE(__stack_start  = __heap_end);
-PROVIDE(__stack_end  = __ram_end);
 
+/*PROVIDE(__heap_end__  = ORIGIN(RAM) + LENGTH(RAM) - MAIN_STACK_SIZE - PROCESS_STACK_SIZE);*/
+
+
+
+PROVIDE(__process_stack_base__  = __ram_end - MAIN_STACK_SIZE - PROCESS_STACK_SIZE);
+PROVIDE(__process_stack_end__  = __process_stack_base__ + PROCESS_STACK_SIZE);
+PROVIDE(__main_thread_stack_base__  = __process_stack_base__); /* alias */
+PROVIDE(__main_thread_stack_end__  = __process_stack_end__); /* alias */
+
+PROVIDE(__main_stack_base__  = __process_stack_end__);
+PROVIDE(__main_stack_end__  = __main_stack_base__ + MAIN_STACK_SIZE);
+
+PROVIDE(__heap_base__  = _bss_end);
+PROVIDE(__heap_end__  = __process_stack_base__);
 SECTIONS
 {
 	/******************************************/
@@ -184,8 +193,8 @@ SECTIONS
 	/* initialized variables */
 	.data : ALIGN (8)
 	{
-		__data_load = LOADADDR (.data);		/* address in FLASH */
-		__data_start = .;					/* address in RAM */
+		_textdata = LOADADDR (.data);		/* address in FLASH */
+		_data = .;					/* address in RAM */
 		
 		KEEP(*(.jcr))
 		*(.got.plt) *(.got)
@@ -194,7 +203,7 @@ SECTIONS
 		*(.data .data.* .gnu.linkonce.d.*)
 		
 		. = ALIGN (4);
-		__data_end = .;
+		_edata = .;
 	} >RAM AT>FLASH
 	
 	.noinit :
@@ -213,21 +222,17 @@ SECTIONS
 	.bss (NOLOAD) :
 	{
 		. = ALIGN(4);
-		__bss_start = . ;
+		_bss_start = . ;
 
 		*(.bss .bss.*)
 		*(.gnu.linkonce.b*)
 		*(COMMON)
 
 		. = ALIGN(4);
-		__bss_end = . ;
+		_bss_end = . ;
 	} >RAM
 	
-	. = ALIGN (4);
-	PROVIDE (__heap_start = .);
-	
 
-	
 	/* Stabs debugging sections.  */
 	.stab          0 : { *(.stab) }
 	.stabstr       0 : { *(.stabstr) }
