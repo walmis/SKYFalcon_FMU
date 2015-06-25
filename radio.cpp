@@ -9,16 +9,41 @@
 #include "pindefs.hpp"
 
 using namespace xpcc;
+using namespace xpcc::stm32;
 
 extern const AP_HAL::HAL& hal;
 
-void Radio::main() {
+void Radio::_irq_entry(void *ths) {
+	static_cast<Radio*>(ths)->irqTask();
+}
+
+void Radio::_main_entry(void *ths) {
+	static_cast<Radio*>(ths)->mainTask();
+}
+
+void Radio::irqTask() {
+	chibios_rt::BaseThread::setName("RadioIRQ");
+	while(1) {
+		irqEvent.wait(10);
+		if(!RadioIrq::read()) {
+			this->RH_RF22::handleInterrupt();
+		}
+//		if(irqEvent.wait(10)) {
+//			this->RH_RF22::handleInterrupt();
+//		} else {
+//			if(!RadioIrq::read()) {
+//				printf("BUG: event timeout but interrupt is set\n");
+//				this->RH_RF22::handleInterrupt();
+//			}
+//		}
+	}
+}
+
+void Radio::mainTask() {
 	chibios_rt::BaseThread::setName("Radio");
 
 	while(1) {
-		if(int_event.wait(1)) {
-			this->RH_RF22::handleInterrupt();
-		}
+		dataEvent.wait(10);
 
 		if (!transmitting()) {
 			if (rxDataLen) {
@@ -102,14 +127,42 @@ void Radio::main() {
 
 bool Radio::init() {
 	if(!hwInitialized) {
+#if 1
+		dma::Config cfg;
+		cfg.periphBaseAddress((uint32_t)&SPI1->DR)
+				->memoryDataSize(dma::MemoryDataSize::Byte)
+				->peripheralDataSize(dma::PeripheralDataSize::Byte)
+				->xferDirection(dma::XferDir::PeripheralToMemory)
+				->channel(dma::Channel::Channel_3)
+				->memoryInc(dma::MemoryInc::Enable);
+
+		dmarx.init(cfg);
+		dmarx.attachCallback([this]() {
+			//XPCC_LOG_DEBUG .printf("dmarc\n");
+			dma_rxEvt.signal();
+		});
+
+		cfg.xferDirection(dma::XferDir::MemoryToPeripheral)
+						   ->channel(dma::Channel::Channel_3);
+
+		dmatx.init(cfg);
+		dmatx.attachCallback([this]() {
+			//XPCC_LOG_DEBUG .printf("dmatc\n");
+			dma_txEvt.signal();
+		});
+
+		SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
+#endif
 		if(!RH_RF22::HWinit()) {
-			hal.scheduler->panic("Radio init failed");
+			hal.scheduler->panic("Radio HW init failed");
 			return false;
 		}
 	}
 	hwInitialized = true;
 
-	RH_RF22::init();
+	if(!RH_RF22::init()) {
+		hal.scheduler->panic("Radio init failed");
+	}
 
 	radio_cfg.frequency.load();
 	radio_cfg.modemCfg.load();
@@ -124,7 +177,9 @@ bool Radio::init() {
 	setModeRx();
 	XPCC_LOG_DEBUG .printf("Radio initialized (f:%d)\n", radio_cfg.frequency.get());
 
-	this->Thread::start(NORMALPRIO+1);
+	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+1, _irq_entry, this);
+	thread_t* tmain = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO, _main_entry, this);
+
 
 	return true;
 }
@@ -162,14 +217,13 @@ bool Radio::sendAck(Packet* inPkt) {
 
 			uint8_t* buf = txBuf + sizeof(Packet);
 			for(int i = 0; i < std::min(maxFrag, txavail); i++) {
-				*buf++ = txbuf.read();
+				*buf++ = popTx();
 			}
 
 			dataLen = buf - txBuf;
 			//printf("Send data %d\n", dataLen);
 			RH_RF22::send(txBuf, dataLen);
 
-			latencyTimer.restart(latency);
 		} else {
 			out->id = PACKET_ACK; //no data to send, send ack
 			RH_RF22::send(txBuf, sizeof(Packet));
@@ -179,11 +233,71 @@ bool Radio::sendAck(Packet* inPkt) {
 	return true;
 }
 
-uint8_t Radio::spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len) {
+uint8_t Radio::spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len) {
 
+    uint8_t status = 0;
+    ATOMIC_BLOCK_START;
+
+	//XPCC_LOG_DEBUG .printf("dmaw\n");
+	dmatx.disable();
+	dma_txEvt.reset();
+
+	dmatx.setCurrDataCounter(len);
+	dmatx.memoryTargetConfig((uint32_t)src, dma::Memory::Memory_0);
+	dmatx.setMemoryInc(dma::MemoryInc::Enable);
+
+    digitalWrite(_slaveSelectPin, LOW);
+    status = _spi.transfer(reg | RH_SPI_WRITE_MASK); // Send the start address with the write mask on
+
+	dmatx.enable();
+
+	if(!dma_txEvt.wait(10)) {
+		XPCC_LOG_DEBUG << "SPI DMA TX Evt timeout\n";
+	}
+
+	dmatx.disable();
+	//empty the rx buffer
+	SPI1->DR;
+
+    digitalWrite(_slaveSelectPin, HIGH);
+    ATOMIC_BLOCK_END;
+    return status;
 }
 
-uint8_t Radio::spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len) {
+uint8_t Radio::spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len) {
+	static uint16_t dummy = 0;
+
+    uint8_t status = 0;
+    ATOMIC_BLOCK_START;
+
+	dma_rxEvt.reset();
+	dmarx.disable();
+	dmatx.disable();
+
+	dmarx.setCurrDataCounter(len);
+	dmarx.memoryTargetConfig((uint32_t)dest, dma::Memory::Memory_0);
+	dmatx.setCurrDataCounter(len);
+	dmatx.memoryTargetConfig((uint32_t)&dummy, dma::Memory::Memory_0);
+	dmatx.setMemoryInc(dma::MemoryInc::Disable);
+
+	dmarx.setXferDirection(dma::XferDir::PeripheralToMemory);
+
+    digitalWrite(_slaveSelectPin, LOW);
+    status = _spi.transfer(reg & ~RH_SPI_WRITE_MASK); // Send the start address with the write mask off
+
+	dmarx.enable();
+	dmatx.enable();
+
+	if(!dma_rxEvt.wait(10)) {
+		XPCC_LOG_DEBUG << "SPI DMA RX Evt timeout\n";
+	}
+
+	dmarx.disable();
+	dmatx.disable();
+
+    digitalWrite(_slaveSelectPin, HIGH);
+    ATOMIC_BLOCK_END;
+    return status;
 
 }
 
@@ -198,17 +312,17 @@ void Radio::handleRxComplete() {
 		if(!recv(rxBuf, (uint8_t*)&rxDataLen)) {
 			rxDataLen = 0;
 		}
+		dataEvent.signal();
 	}
-
-
 }
 
 void Radio::handleInterrupt() {
-	int_event.signal();
+	irqEvent.signal();
 }
 
 void Radio::handleTxComplete() {
 	setModeRx();
+	dataEvent.signal();
 }
 
 void Radio::handleReset() {

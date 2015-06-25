@@ -64,13 +64,13 @@ void GPIO::write(uint8_t pin, uint8_t value)
 {
 	//handle LEDs
 	if(pin == 0xFF) {
-
+		LedBlue::set(value);
 	}
 	if(pin == 0xFE) {
-
+		LedRed::set(value);
 	}
 	if(pin == 0xFD) {
-
+		LedGreen::set(value);
 	}
 	/////
 

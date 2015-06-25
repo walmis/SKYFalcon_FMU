@@ -19,6 +19,12 @@ void Storage::init(void*)
 {
 //	eeprom.waitAvailable(20);
 	//eeprom.isAvailable()
+
+	//sleep(100);
+	uint8_t buf;
+	if(!eeprom.read(0, (uint8_t*)&buf, 1)) {
+		hal.scheduler->panic("PANIC: Eeprom init failed\n");
+	}
 }
 
 void Storage::read_block(void* dst, uint16_t src, size_t n) {
@@ -28,7 +34,8 @@ void Storage::read_block(void* dst, uint16_t src, size_t n) {
 	//XPCC_LOG_DEBUG .printf("r %d %d\n", src, n);
 	if(!eeprom.read(src, (uint8_t*)dst, n)) {
 		//hal.scheduler->panic("PANIC: Eeprom read failed\n");
-		XPCC_LOG_DEBUG .printf("EEPROM read failed (addr %d)\n", src);
+		XPCC_LOG_DEBUG .printf("EEPROM read failed (addr %d, st %d)\n", src, eeprom.errno);
+		xpcc::stm32::I2cMaster1::resetTransaction(&eeprom);
 	}
 }
 

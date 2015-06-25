@@ -6,6 +6,7 @@
 using namespace XpccHAL;
 
 extern const AP_HAL::HAL& hal;
+extern volatile uint32_t timerOverflowCount;
 
 AP_HAL::Proc Scheduler::_failsafe = 0;
 volatile bool      Scheduler::_timer_proc_enabled = false;
@@ -30,6 +31,7 @@ void Scheduler::init(void* machtnichts)
 
 void Scheduler::delay(uint16_t ms)
 {
+	if(ms == 0) return;
 
 	uint32_t start = micros();
     while (ms > 0) {
@@ -50,35 +52,23 @@ void Scheduler::delay(uint16_t ms)
 static void restore_priority(void*) {
 	chibios_rt::System::lockFromIsr();
 	ch.mainthread.p_prio = NORMALPRIO;
-	ch.mainthread.p_realprio = NORMALPRIO;
+	//ch.mainthread.p_realprio = NORMALPRIO;
 	chibios_rt::System::unlockFromIsr();
 }
 
 void Scheduler::delay_microseconds_boost(uint16_t us) {
+	if(us == 0) return;
+
 	static virtual_timer_t timer;
 
-	chibios_rt::System::lock();
-	ch.mainthread.p_prio = HIGHPRIO;
-	ch.mainthread.p_realprio = HIGHPRIO;
-	chibios_rt::System::unlock();
-
+	//chibios_rt::BaseThread::setPriority(HIGHPRIO);
+	//ch.mainthread.p_prio = HIGHPRIO;
 	chibios_rt::BaseThread::sleep(us);
 
-	chVTSet(&timer, 150, restore_priority, (void*)0);
+	//chVTSet(&timer, 150, restore_priority, (void*)0);
 	//chibios_rt::BaseThread::setPriority(NORMALPRIO);
 }
 
-void Scheduler::_timer_procs_timer_event()
-{
-
-}
-//uint64_t Scheduler::millis64() {
-//    return 10000;
-//}
-//
-//uint64_t Scheduler::micros64() {
-//    return 200000;
-//}
 
 void Scheduler::main() {
 	chibios_rt::BaseThread::setName("HALTimer");
@@ -86,9 +76,9 @@ void Scheduler::main() {
 	while(1) {
 		//uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
 
-		//xpcc::stm32::PB15::set();
-		_run_timer_procs(false);
-		//xpcc::stm32::PB15::reset();
+		//xpcc::stm32::PB13::set();
+		_run_timer_procs(true);
+		//xpcc::stm32::PB13::reset();
 		//synchronize on MPU6050 1khz DRDY
 		mpu6k_evt.wait(1);
 	}
@@ -107,11 +97,24 @@ uint64_t Scheduler::millis64() {
 }
 
 uint64_t Scheduler::micros64() {
-    return chibios_rt::System::getTimeX();
+	__disable_irq();
+	static uint32_t last_time;
+	static uint32_t thigh = 0;
+	uint32_t time = chibios_rt::System::getTimeX();
+	//handle timer overflow
+	if(time < last_time) {
+		thigh++;
+	}
+	last_time = time;
+
+    uint64_t ret = ((uint64_t)thigh)<<32 | time ;
+    __enable_irq();
+    return ret;
 }
 
 void Scheduler::delay_microseconds(uint16_t us)
 {
+	if(us==0) return;
 	chibios_rt::BaseThread::sleep(us);
 }
 
@@ -160,14 +163,18 @@ void Scheduler::resume_timer_procs()
 {
 	_timer_proc_enabled = true;
     if (_timer_event_missed == true) {
-        _run_timer_procs(false);
+    	_run_timer_procs(false);
         _timer_event_missed = false;
     }
 }
 
 void Scheduler::_run_timer_procs(bool called_from_isr)
 {
-    _in_timer_proc = true;
+    if (_in_timer_proc) {
+        return;
+    }
+
+	_in_timer_proc = true;
 
     static uint8_t last_proc_id = 0;
 
@@ -175,7 +182,7 @@ void Scheduler::_run_timer_procs(bool called_from_isr)
         // now call the timer based drivers
         for (int i = last_proc_id; i < _num_timer_procs; i++) {
             if (_timer_proc[i]) {
-                _timer_proc[i]();
+            	_timer_proc[i]();
             }
         }
 //        for (int i = 0; i < last_proc_id; i++) {
@@ -192,6 +199,7 @@ void Scheduler::_run_timer_procs(bool called_from_isr)
     }
 
     _in_timer_proc = false;
+
 }
 
 bool Scheduler::in_timerprocess() {
@@ -220,19 +228,18 @@ void Scheduler::system_initialized()
 void Scheduler::panic(const prog_char_t *errormsg) {
 	XPCC_LOG_ERROR << errormsg << xpcc::endl;
     hal.console->println_P(errormsg);
-//    ledBlue::set();
-//    ledRed::set();
-//    ledGreen::set();
+    LedBlue::set();
+    LedRed::set();
+    LedGreen::set();
     for(;;);
 }
 
 void Scheduler::reboot(bool hold_in_bootloader) {
 	if(hold_in_bootloader) {
-		//causes immediate reset
-		//LPC_WDT->WDFEED = 0xFF;
-	} else {
-		NVIC_SystemReset();
+		*(uint32_t*)0x2000FFF0 = 0xDEADBEEF;
 	}
+
+	NVIC_SystemReset();
 }
 
 void Scheduler::yield() {

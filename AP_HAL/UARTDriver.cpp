@@ -34,7 +34,8 @@ bool UARTDriver::is_initialized() {
 }
 
 void UARTDriver::set_blocking_writes(bool blocking) {
-	_blocking_writes = blocking;
+	if(_device)
+		_device->setBlocking(blocking);
 }
 
 bool UARTDriver::tx_pending() { return false; }
@@ -60,15 +61,14 @@ size_t UARTDriver::write(uint8_t c) {
 	if(!_device)
 		return 0;
 
-	if(_blocking_writes || _device->txAvailable() < 0) {
-		while(!_device->write(c));
-		return 1;
-	} else {
-		if(_device->txAvailable() > 0) {
-			return _device->write(c);
-		}
-	}
-	return 0;
+//	if(_blocking_writes || _device->txAvailable() < 0) {
+//		while(!_device->write(c));
+//		return 1;
+//	} else {
+//		if(_device->txAvailable() > 0) {
+	return _device->write(c);
+//		}
+//	}
 }
 
 size_t UARTDriver::write(const uint8_t *buffer, size_t size)
@@ -77,14 +77,14 @@ size_t UARTDriver::write(const uint8_t *buffer, size_t size)
     if(!_device)
     	return 0;
 
-	if(_blocking_writes || _device->txAvailable() < 0) {
-		while (size--) {
-			uint8_t c = *buffer++;
-			while(!_device->write(c));
-			n++;
-		}
-		return n;
-    } else {
-    	return _device->write(buffer, size);
-    }
+//	if(_blocking_writes || _device->txAvailable() < 0) {
+//		while (size--) {
+//			uint8_t c = *buffer++;
+//			while(!_device->write(c));
+//			n++;
+//		}
+//		return n;
+//    } else {
+    return _device->write(buffer, size);
+   // }
 }

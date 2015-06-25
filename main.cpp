@@ -16,6 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "AP_HAL/DataFlash_Xpcc.h"
 
 #include <xpcc/architecture.hpp>
 #include <xpcc/processing.hpp>
@@ -47,14 +48,16 @@
 #include "AP_HAL/UARTDriver.h"
 #include "AP_HAL/GPIO.h"
 #include "AP_HAL/AnalogIn.h"
+
 #include "pindefs.hpp"
 #include "radio.hpp"
 
 #include <ch.hpp>
 
+
 BufferedUart<stm32::Usart2> uart2(57600, 128, 128);
-BufferedUart<stm32::Usart1> uart1(230400, 512, 128);
-BufferedUart<stm32::Usart6> uartGps(57600, 128, 128);
+BufferedUart<stm32::Usart1> uart1(230400, 16, 128);
+BufferedUart<stm32::Usart6> uartGps(38400, 128, 128);
 
 xpcc::log::Logger xpcc::log::debug(uart1);
 xpcc::log::Logger xpcc::log::error(uart1);
@@ -97,46 +100,21 @@ uint32_t micros()
 }
 
 XpccHAL::UARTDriver uartADriver(&usb.serial);
-XpccHAL::UARTDriver uartBDriver(0);
-XpccHAL::UARTDriver uartCDriver(0);
+XpccHAL::UARTDriver uartBDriver(&uartGps);
+XpccHAL::UARTDriver uartCDriver(&radio);
 XpccHAL::UARTDriver uartDDriver(0);
-XpccHAL::UARTDriver uartEDriver(0);
+XpccHAL::UARTDriver uartEDriver(&uart2);
 XpccHAL::UARTDriver uartConsoleDriver(&uart1);
 
-
-
-class Vol : public USBMSDHandler {
-
-    void transfer_begins(TransferType type, uint32_t startBlock, int numBlocks) {
-    	//XPCC_LOG_DEBUG .printf("tr start total %d\n", numBlocks);
-
-    }
-    int disk_read_start(uint8_t * data, uint32_t block, uint32_t blocksLeft) {
-    	memset(data, 0xcc, 512);
-    	disk_read_finalize(true);
-    	return DISK_OK;
-    }
-    int disk_write_start(const uint8_t * data, uint32_t block, uint32_t blocksLeft) {
-    	disk_write_finalize(true);
-    	return DISK_OK;
-    }
-
-    int disk_initialize() {
-    	return DISK_OK;
-    }
-    uint32_t disk_sectors() {
-    	return 1024*1024;
-    }
-    uint16_t disk_sector_size() {
-    	return 512;
-    }
-    int disk_status() {
-    	return DISK_OK;
-    }
-
+class DFU final : public DFUHandler {
+public:
+	void do_detach() {
+		detach = true;
+	}
+	bool detach;
 };
 
-
+DFU dfu;
 
 //IOStream usbserial(usb);
 //USBCDCMSD<USBMSD_VolumeHandler> usb(0xFFFF, 0x5678, 0, &sdCard);
@@ -147,9 +125,12 @@ Radio radio;
 bool storage_lock;
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
-//	if(device == &uartGps) {
-//		uartGps.setBaud(baud);
-//	}
+	if(device == &uartGps) {
+		uartGps.setBaud(baud);
+	}
+	if(device == &uart2) {
+		uart2.setBaud(baud);
+	}
 }
 
 bool XpccHAL::GPIO::usb_connected(void)
@@ -166,13 +147,6 @@ void _delay_ms(uint32_t ms) {
 
 using namespace xpcc;
 using namespace stm32;
-
-
-void boot_flag() {
-	RTC->BKP0R |= (1<<31);
-	NVIC_SystemReset();
-}
-
 
 
 void SD_LowLevel_init() {
@@ -238,23 +212,18 @@ void SPI_LowLevel_init() {
 }
 
 void I2C_LowLevel_init() {
-	Scl::setOutputType(GPIOOType::GPIO_OType_OPENDRAIN);
-	Scl::setSpeed(GPIOSpeed::GPIO_Speed_50MHz);
+	//Scl::setOutputType(GPIOOType::GPIO_OType_OPENDRAIN);
+
+	//Drive SCL clock. This increases robustness of i2c comms.
+	//Note that clock stretching devices are not supported in this case.
+	Scl::setOutputType(GPIOOType::GPIO_OType_PUSHPULL);
+	Scl::setSpeed(GPIOSpeed::GPIO_Speed_2MHz);
 	Scl::setPullMode(GPIOPuPd::GPIO_PuPd_UP);
 
 
 	Sda::setOutputType(GPIOOType::GPIO_OType_OPENDRAIN);
-	Sda::setSpeed(GPIOSpeed::GPIO_Speed_50MHz);
+	Sda::setSpeed(GPIOSpeed::GPIO_Speed_2MHz);
 	Sda::setPullMode(GPIOPuPd::GPIO_PuPd_UP);
-
-	Scl::setOutput(1);
-
-	for(int i = 0; i < 2*9; i++) {
-		Scl::reset();
-		sleep(1);
-		Scl::set();
-		sleep(1);
-	}
 
 	Scl::setFunction(AltFunction::AF_I2C1);
 	Sda::setFunction(AltFunction::AF_I2C1);
@@ -330,56 +299,6 @@ protected:
 
 };
 
-class MyTask : public TickerTask {
-protected:
-	void handleTick() {
-			XPCC_LOG_DEBUG .printf("Task\n");
-			chThdSleepMilliseconds(333);
-	}
-};
-
-//ChTask<MyTask, 512> TestCoop;
-
-
-class Test: TickerTask {
-
-	void handleTick() {
-		static PeriodicTimer<> t(500);
-
-		if (t.isExpired()) {
-
-				//XPCC_LOG_DEBUG .printf("Board %.3f\n", hal.analogin->board_voltage());
-				//XPCC_LOG_DEBUG.printf("I2C CR1=%x CR2=%x SR1=%x\n", I2C1->CR1,
-				//I2C1->CR2, I2C1->SR1);
-
-				//PB15::reset();
-
-				//usb.write('A');
-				//usbserial << "Hello world\n";
-
-				//XPCC_LOG_DEBUG.printf("PSP %x\n", __get_PSP());
-
-				LedRed::toggle();
-				//LedGreen::toggle();
-				//LedBlue::toggle();
-				//PB15::set();
-
-				//XPCC_LOG_DEBUG .printf("ADC1->SR 0x%x %x %x\n", ADC1->SR, DMA2_Stream0->NDTR, DMA2_Stream0->CR);
-				//XPCC_LOG_DEBUG .printf("s[0] %d\n",reinterpret_cast<XpccHAL::AnalogIn*>(hal.analogin)->samples[0]);
-				//XPCC_LOG_DEBUG .printf("s[1] %d\n",reinterpret_cast<XpccHAL::AnalogIn*>(hal.analogin)->samples[1]);
-				//XPCC_LOG_DEBUG .printf("s[2] %d\n",reinterpret_cast<XpccHAL::AnalogIn*>(hal.analogin)->samples[2]);
-				//XPCC_LOG_DEBUG .printf("s[3] %d\n",reinterpret_cast<XpccHAL::AnalogIn*>(hal.analogin)->samples[3]);
-			//chThdYield();
-		}
-
-		//static uint8_t buf[64];
-		//memset(buf, 'A', 64);
-		//usb.writeNB(CDC_EPBULK_IN, buf, 64, 64);
-	}
-
-};
-
-Test task;
 
 
 class T2: TickerTask {
@@ -415,6 +334,8 @@ class T2: TickerTask {
 
 	void handleTick() {
 		int c;
+
+		static uint8_t b[512] __aligned(4);
 
 		if ((c = uart1.read()) >= 0) {
 			if (c == 'r') {
@@ -461,7 +382,17 @@ class T2: TickerTask {
 			if (c == 'x') {
 				uint8_t data2[12];
 				//while(1) {
-				if (hal.i2c->readRegisters(0x68, 0x0C, 1, data2) == 1) {
+				if (hal.i2c->readRegisters(0x68, 0x0C, 2, data2) == 1) {
+					XPCC_LOG_DEBUG.printf("failed\n");
+				}
+				//}
+				XPCC_LOG_DEBUG.printf("%x\n", data2[0]);
+			}
+
+			if (c == 'z') {
+				uint8_t data2[12];
+				//while(1) {
+				if (hal.i2c->readRegisters(0x68, 0x0C, 4, data2) == 1) {
 					XPCC_LOG_DEBUG.printf("failed\n");
 				}
 				//}
@@ -469,8 +400,7 @@ class T2: TickerTask {
 			}
 
 			if (c == 's') {
-				static __aligned(4) uint8_t b[1024];
-				memset(b, 0, 1024);
+				memset(b, 0, 512);
 
 //			uint32_t c = stm32::GPTimer5::getValue();
 //			for (int i = 0; i < 10; i++) {
@@ -487,43 +417,23 @@ class T2: TickerTask {
 				//XPCC_LOG_DEBUG .printf("time %d\n", c );
 
 				//sdCard.doRead(b, 1, 2);
-				sdCard.doRead(b, 0, 2);
-				XPCC_LOG_DEBUG.dump_buffer(b, 1024);
+				sdCard.doRead(b, 0, 1);
+				XPCC_LOG_DEBUG.dump_buffer(b, 512);
 
-				sdCard.doRead(b, 2, 2);
-				XPCC_LOG_DEBUG.dump_buffer(b, 1024);
 			}
 
 			if (c == 'b') {
+				__disable_irq();
+				 *((unsigned long *)0x2000FFF0) = 0xDEADBEEF;
+				NVIC_SystemReset();
 
-				//sd.writeStart(1, 0);
-
-				uint8_t b[512];
-				memset((uint8_t*) b, 0xBA, 512);
-				sdCard.writeBlock(1, b);
-				//
-				//				memset((uint8_t*)b, 0xCC, 512);
-				//				sd.writeBlock(2, b);
-				//
-				//				memset((uint8_t*)c, 0x55, 512);
-				//				sd.writeBlock(3, b);
-				//
-				//				memset((uint8_t*)c, 0xDD, 512);
-				//				sd.writeBlock(4, b);
-				//
-				//				memset((uint8_t*)c, 0xEE, 512);
-				//				sd.writeBlock(5, b);
-
-				//sd.writeStop();
-
-				//sd.writeBlock(1, (uint8_t*)b);
 			}
 
 			if (c == '2') {
 
 				sdCard.writeStart(1, 5);
 
-				uint8_t b[512];
+
 				memset((uint8_t*) b, 0x11, 512);
 				sdCard.writeData(b);
 
@@ -550,25 +460,15 @@ class T2: TickerTask {
 
 			if (c == '3') {
 
-				uint8_t b[512];
-				sdCard.writeStart(1, 10);
+				memset((uint8_t*) b, 0x11, 512);
 
-				for(int i = 0; i < 10000; i++) {
-
-					memset((uint8_t*) b, (uint8_t)i, 512);
-
-					if(!sdCard.writeData(b)) {
-						XPCC_LOG_DEBUG .printf("block %d failed\n", i+1);
-					}
-
+				for(int i = 5; i < 15; i++) {
+					sdCard.writeBlock(i, b);
 				}
-
-				sdCard.writeStop();
 
 			}
 
 			if (c == 'm') {
-				static uint8_t b[512];
 				sdCard.readStart(1);
 
 				uint32_t c = stm32::GPTimer5::getValue();
@@ -610,6 +510,12 @@ class T2: TickerTask {
 				}
 
 			}
+
+			if(c == '*') {
+				volatile float testas = 0.45f;
+				testas /= 0.0f;
+			}
+
 			if(c == ']') {
 				static uint8_t g = 0;
 				g++;
@@ -662,22 +568,6 @@ class T2: TickerTask {
 T2 test;
 
 
-static THD_WORKING_AREA(waThread1, 128);
-static THD_FUNCTION(Thread1, arg) {
-
-  (void)arg;
-  chRegSetThreadName("blinker");
-
-  while (true) {
-    LedBlue::toggle();
-    chThdSleepMilliseconds(200);
-    LedBlue::toggle();
-    chThdSleepMilliseconds(200);
-
-  }
-}
-
-
 class USBStorage : chibios_rt::BaseStaticThread<512> {
 public:
 	USBStorage() {
@@ -689,9 +579,9 @@ protected:
 	void main() {
 		chibios_rt::BaseThread::setName("usb_storage");
 		while(1) {
-			LedGreen::reset();
+			LedRed::reset();
 			msd_handler.waitForEvent();
-			LedGreen::set();
+			LedRed::set();
 			msd_handler.run();
 		}
 	}
@@ -706,7 +596,11 @@ extern void loop();
 
 int main() {
 	stm32::SysTickTimer::enable();
-	//boot_flag();
+	usb.addInterfaceHandler(dfu);
+
+	//wait for devices to settle
+	sleep(20);
+
 	//SDIO pins
 	SD_LowLevel_init();
 	////
@@ -728,33 +622,22 @@ int main() {
 //	PB15::setPullMode(GPIOPuPd::GPIO_PuPd_UP);
 //	PB15::setSpeed(GPIOSpeed::GPIO_Speed_100MHz);
 	PB15::setOutput(0);
+	PB13::setOutput(0);
+
+	XPCC_LOG_DEBUG << "Init Board\n";
+	XPCC_LOG_DEBUG .printf("fAPB1 %d\n", Clocks::getPCLK1Frequency());
+	XPCC_LOG_DEBUG .printf("fAPB2 %d\n", Clocks::getPCLK2Frequency());
+	XPCC_LOG_DEBUG .printf("fAHB %d\n", Clocks::getHCLKFrequency());
 
 	sdCard.init();
 
-	//port_timer_start_alarm(1000000);
-
-	XPCC_LOG_DEBUG .printf("f APB1 %d\n", Clocks::getPCLK1Frequency());
-	XPCC_LOG_DEBUG .printf("f APB2 %d\n", Clocks::getPCLK2Frequency());
-	XPCC_LOG_DEBUG .printf("f AHB %d\n", Clocks::getHCLKFrequency());
-
 	hal.init(0, 0);
-
-	XPCC_LOG_DEBUG .printf("ipsr %d %x\n", __get_IPSR(), new uint32_t[4]);
-
-	chThdCreateStatic(waThread1, sizeof(waThread1), HIGHPRIO, Thread1, NULL);
-
-	//chThdYield();
-
-	//XPCC_LOG_DEBUG .printf("main stack size %d\n", &__main_stack_end__ - &__main_stack_base__ );
-
-	usb.connect();
 
 	NVIC_SetPriority(USART1_IRQn, 4);
 	NVIC_SetPriority(USART2_IRQn, 4);
 	NVIC_SetPriority(USART6_IRQn, 4);
 
-	NVIC_SetPriority(I2C1_EV_IRQn, 5);
-	NVIC_SetPriority(I2C1_ER_IRQn, 5);
+	I2cMaster1::setIrqPriority(5);
 
 	NVIC_SetPriority(OTG_FS_IRQn, 8);
 	NVIC_SetPriority(SDIO_IRQn, 8);
@@ -764,13 +647,27 @@ int main() {
 	TickerTask::tasksInit();
 	//TickerTask::tasksRun();
 
+	usb.connect();
+
+	//NVIC_EnableIRQ(FPU_IRQn);
+	//NVIC_SetPriority(FPU_IRQn, 0);
+
 	setup();
 
+	//turn off blocking writes after format data is written
+	dataflash.setBlockingWrites(false);
+
 	for(;;) {
-		dbgset();
+		//dbgset();
 		loop();
-		dbgclr();
+		//dbgtgl();
+		//dbgclr();
 		TickerTask::tick();
+
+		if(dfu.detach) {
+			sleep(100);
+			hal.scheduler->reboot(true);
+		}
 	}
 
 }

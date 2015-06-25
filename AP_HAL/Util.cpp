@@ -13,8 +13,12 @@
 extern "C" uint8_t __heap_end__;
 
 uint16_t XpccHAL::Util::available_memory(void) {
+	size_t mem = chCoreGetStatusX();
 
-	return &__heap_end__ - (uint8_t*)sbrk(0);
+	if(mem > 0xFFFF) {
+		return 0xFFFF;
+	}
+	return mem;
 }
 
 void XpccHAL::Util::set_system_clock(uint64_t time_utc_usec)  {

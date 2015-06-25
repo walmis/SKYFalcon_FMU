@@ -8,8 +8,9 @@ extern const AP_HAL::HAL& hal;
 
 uint8_t AnalogSource::_ch_cnt = 0;
 
-AnalogSource::AnalogSource(int16_t chan, AnalogIn* parent) : _chan(-1), _chan_idx(-1)
+AnalogSource::AnalogSource(int16_t chan) : _chan(-1), _chan_idx(-1)
 {
+	XPCC_LOG_DEBUG .printf("analog channel %d\n", chan);
 	count = 0;
 	sum = 0;
 	_voltage_avg = 0;
@@ -23,7 +24,7 @@ AnalogSource::AnalogSource(int16_t chan, AnalogIn* parent) : _chan(-1), _chan_id
 
 void AnalogSource::set_pin(uint8_t p)
 {
-	if(p == 255) return;
+	if(p == 255 || p == _chan) return;
 	XPCC_LOG_DEBUG .printf("adding adc channel %d\n", p);
 	//register channel with ADC
 	if(_chan_idx == -1) {
@@ -75,7 +76,7 @@ void AnalogSource::_update() {
 
 	_voltage_latest = (rawValue) * (3.3f / 4096.0f);
 
-	_voltage_avg = (_voltage_avg*99 + _voltage_latest) / 100.0;
+	_voltage_avg = (_voltage_avg*99 + _voltage_latest) / 100.0f;
 }
 
 
@@ -148,7 +149,7 @@ AP_HAL::AnalogSource* AnalogIn::channel(int16_t n) {
 
 	for(int i = 0; i < max_channels; i++) {
 		if(channels[i] == 0) {
-			channels[i] = new AnalogSource(n, this);
+			channels[i] = new AnalogSource(n);
 
 			num_channels++;
 			return channels[i];

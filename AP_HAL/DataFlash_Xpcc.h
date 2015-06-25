@@ -7,14 +7,17 @@
    given directory
  */
 
-#ifndef DataFlash_File_h
-#define DataFlash_File_h
+#pragma once
 
 #include <DataFlash.h>
+#include <xpcc/processing.hpp>
 #include <xpcc/driver/storage/fat.hpp>
 
-class DataWriter : xpcc::TickerTask {
+class DataWriterThread : public chibios_rt::BaseStaticThread<512> {
 public:
+
+	void main();
+
 	void startWrite(xpcc::fat::File *file);
 
 	bool write(uint8_t* data, size_t size);
@@ -26,12 +29,12 @@ public:
 	}
 
 protected:
-	void handleTick();
-	void handleInit();
 
-	uint8_t tmpBuffer[512];
+	uint8_t tmpBuffer[1024];
 	IOBuffer buffer;
 	xpcc::fat::File* file;
+	xpcc::Event dataAvail;
+	volatile bool stop;
 };
 
 class DataFlash_Xpcc : public DataFlash_Class
@@ -46,9 +49,9 @@ public:
     uint16_t get_num_logs(void);
 
     void LogReadProcess(uint16_t log_num,
-                                uint16_t start_page, uint16_t end_page,
-                                void (*printMode)(AP_HAL::BetterStream *port, uint8_t mode),
-                                AP_HAL::BetterStream *port);
+				uint16_t start_page, uint16_t end_page,
+				print_mode_fn printMode,
+				AP_HAL::BetterStream *port);
     void DumpPageInfo(AP_HAL::BetterStream *port);
     void ShowDeviceInfo(AP_HAL::BetterStream *port);
     void ListAvailableLogs(AP_HAL::BetterStream *port);
@@ -63,18 +66,28 @@ public:
 
     bool NeedErase(void);
     void EraseAll() {}
+
     bool ReadBlock(void *pkt, uint16_t size) {
     	return false;
     };
 
+    void setBlockingWrites(bool s) {
+    	blockingWrites = s;
+    }
+
+
 protected:
     xpcc::fat::File *file;
     xpcc::fat::File *read_file;
-    DataWriter writer;
+    DataWriterThread writer;
+    chibios_rt::Mutex writeLock;
 
     uint16_t last_log;
     uint16_t num_logs;
+
+    bool blockingWrites = true;
 };
 
-#endif // DataFlash_File_h
+extern DataFlash_Xpcc dataflash;
+
 

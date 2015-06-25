@@ -45,7 +45,6 @@ public:
     void	 yield();
 
 private:
-
     xpcc::Event mpu6k_evt;
 
     //timer thread
@@ -67,7 +66,6 @@ private:
     static AP_HAL::MemberProc _timer_proc[MAX_TIMER_PROCS];
     static volatile uint8_t _num_timer_procs;
 
-    static void _timer_procs_timer_event();
 };
 
 #endif // __AP_HAL_EMPTY_SCHEDULER_H__

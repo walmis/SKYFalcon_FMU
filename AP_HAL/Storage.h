@@ -4,6 +4,7 @@
 
 #include "AP_HAL_XPCC.h"
 
+
 class XpccHAL::Storage final : public AP_HAL::Storage {
 public:
     Storage();

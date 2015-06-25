@@ -7,7 +7,7 @@
 
 class XpccHAL::AnalogSource final: public AP_HAL::AnalogSource {
 public:
-    AnalogSource(int16_t chan, AnalogIn* parent);
+    AnalogSource(int16_t chan);
     float read_average();
     float read_latest();
     void set_pin(uint8_t p);

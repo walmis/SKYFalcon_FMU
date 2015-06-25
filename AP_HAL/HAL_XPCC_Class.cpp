@@ -47,12 +47,13 @@ void HAL_XPCC::init(int argc,char* const argv[]) const {
     scheduler->init(0);
 
     analogin->init(0);
-    storage->init(0);
+
     rcout->init(0);
     rcin->init(0);
 
     i2c->begin();
 
+    storage->init(0);
 }
 
 const HAL_XPCC AP_HAL_XPCC;

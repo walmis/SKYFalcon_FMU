@@ -14,6 +14,7 @@
 #include <xpcc/processing.hpp>
 #include <fatfs/diskio.h>
 #include <fatfs/ff.h>
+#include "../pindefs.hpp"
 
 using namespace xpcc;
 
@@ -24,64 +25,71 @@ extern volatile bool storage_lock;
 #define MAX_LOG_FILES 500U
 #define DATAFLASH_PAGE_SIZE 1024UL
 
-void DataWriter::startWrite(xpcc::fat::File *file) {
-	this->file = file;
-	if(!file) {
-		stopTask(); //stop task
-	} else {
-		startTask(); //resume task
-	}
-}
 
-void DataWriter::handleInit() {
+
+void DataWriterThread::main() {
 	if(!buffer.allocate(1024*8)) {
 		hal.scheduler->panic("Failed to allocate logger buffer");
 	}
-}
 
-void DataWriter::stopWrite() {
-	if(file) {
-		//write all remaining data
-		while(buffer.bytes_used()) {
-			handleTick();
+	while(1) {
+		static PeriodicTimer<> t(500);
+		//wait for data
+		dataAvail.wait(500);
+		if(stop) {
+			file = 0;
+			stop = false;
 		}
-	}
-	stopTask(); //stop task
-}
 
-void DataWriter::handleTick() {
-	static PeriodicTimer<> t(500);
-	if(file && storage_lock) {
-		while(buffer.bytes_used()) {
-			int16_t n_read = buffer.read(tmpBuffer, sizeof(tmpBuffer));
-			if(n_read > 0) {
-				if(file->write(tmpBuffer, n_read) == -1) {
-					//error
-					hal.console->print("Dataflash write error\n");
-					file = 0;
-					stopWrite();
-					return;
+		if(file && storage_lock) {
+			while(buffer.bytes_used() >= sizeof(tmpBuffer)) {
+				LedRed::set();
+				int16_t n_read = buffer.read(tmpBuffer, sizeof(tmpBuffer));
+				if(n_read > 0) {
+					if(file->write(tmpBuffer, n_read) == -1) {
+						//error
+						hal.console->print("Dataflash write error\n");
+						file = 0;
+						stopWrite();
+						LedRed::reset();
+						continue;
+					}
 				}
+				LedRed::reset();
+			}
+			if(t.isExpired()) {
+				file->flush();
 			}
 		}
-		if(t.isExpired()) {
-			file->flush();
-		}
 	}
 }
 
-bool DataWriter::write(uint8_t* data, size_t size) {
+void DataWriterThread::startWrite(xpcc::fat::File *new_file) {
+	file = new_file;
+
+}
+
+
+void DataWriterThread::stopWrite() {
+	stop = true;
+}
+
+
+bool DataWriterThread::write(uint8_t* data, size_t size) {
 	if(!file)
 		return false;
 
 	if(buffer.bytes_free() < size) {
-		hal.console->printf("Dataflash blocking write!\n");
-	}
-	while(buffer.bytes_free() < size) {
-		xpcc::yield();
+		//lets try a yield, maybe the writer will free up some space
+		yield();
+		if(buffer.bytes_free() < size) {
+			//nope, okay then fail
+			return false;
+		}
 	}
 
 	buffer.write(data, size);
+	dataAvail.signal();
 	return true;
 }
 
@@ -90,8 +98,8 @@ bool DataWriter::write(uint8_t* data, size_t size) {
  */
 void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_types)
 {
-    DataFlash_Class::Init(structure, num_types);
-    XPCC_LOG_INFO << "dataflash init\n";
+	DataFlash_Class::Init(structure, num_types);
+    XPCC_LOG_INFO << "LOG: Init\n";
 
     storage_lock = 1;
 
@@ -129,7 +137,7 @@ void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_type
 
     	while(dir.readDir(fil) == FR_OK && !fil.eod()) {
     		if(strstr(fil.getName(), ".bin")) {
-    			hal.console->println( fil.getName() );
+    			//hal.console->println( fil.getName() );
     			num_logs++;
     		}
     	}
@@ -147,10 +155,11 @@ void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_type
     //if usb is connected release lock
     if(hal.gpio->usb_connected())
     	storage_lock = 0;
+
+    writer.start(NORMALPRIO);
 }
 
 fat::File* DataFlash_Xpcc::openLog(uint16_t log_num, char* mode) {
-
 	fat::Directory dir;
 
 	dir.open("/apm");
@@ -185,14 +194,20 @@ bool DataFlash_Xpcc::NeedErase(void){
 }
 
 void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
+	if(!file)
+		return;
 
 	static xpcc::PeriodicTimer<> t(1000);
 	static uint32_t count;
+	static uint32_t dropped = 0;
 	count += size;
 	if(t.isExpired()) {
-		XPCC_LOG_DEBUG .printf("log wr %d b/s\n", count);
+		XPCC_LOG_DEBUG .printf("log wr %d b/s (buf avail %d, dropped %d)\n", count,
+				writer.bytesAvailable(), dropped);
 		count = 0;
 	}
+
+	writeLock.lock();
 
 	//if usb is connected, stop writing logs and mount msd storage
 	if(file && file->isOpened() && hal.gpio->usb_connected()) {
@@ -205,12 +220,16 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 	}
 
 	if(storage_lock) {
-
-
 		//XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
+		bool res = 0;
+		while(!(res = writer.write((uint8_t*)pBuffer, size)) && blockingWrites);
 
-		writer.write((uint8_t*)pBuffer, size);
+		if(!res) {
+			dropped += size;
+		}
 	}
+
+	writeLock.unlock();
 }
 
 uint16_t DataFlash_Xpcc::find_last_log(void) {
@@ -275,10 +294,10 @@ uint16_t DataFlash_Xpcc::get_num_logs(void) {
 	return num_logs;
 }
 
-void DataFlash_Xpcc::LogReadProcess(uint16_t log_num, uint16_t start_page,
-		uint16_t end_page,
-		void (*printMode)(AP_HAL::BetterStream* port, uint8_t mode),
-		AP_HAL::BetterStream* port) {
+void DataFlash_Xpcc::LogReadProcess(uint16_t log_num,
+        uint16_t start_page, uint16_t end_page,
+        print_mode_fn printMode,
+        AP_HAL::BetterStream *port) {
 	XPCC_LOG_INFO << __PRETTY_FUNCTION__ << xpcc::endl;
 }
 
@@ -330,7 +349,7 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 		l.close();
 	}
 
-	return 0;
+	return last_log;
 }
 
 void DataFlash_Xpcc::ReadManufacturerID() {
@@ -342,3 +361,6 @@ bool DataFlash_Xpcc::CardInserted() {
 	}
 	return true;
 }
+
+DataFlash_Xpcc dataflash;
+const DataFlash_Class& dataflash_skyfalcon = dataflash;

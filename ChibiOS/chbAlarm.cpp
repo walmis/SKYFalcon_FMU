@@ -17,6 +17,9 @@ void port_timer_init() {
 	xpcc::stm32::GPTimer5::setPrescaler(SystemCoreClock / 2000000);
 	xpcc::stm32::GPTimer5::applyAndReset();
 	xpcc::stm32::GPTimer5::start();
+	//TIM5->CNT = 1;
+	TIM5->CNT = 0xFFFFFFFF - 30000000;
+	TIM5->CCR2 = 0; //overflow compare
 //	//////
 
 	NVIC_SetPriority(TIM5_IRQn, 3);
@@ -30,15 +33,18 @@ void TIM5_IRQHandler() {
 	/* Note, under rare circumstances an interrupt can remain latched even if
 	 the timer SR register has been cleared, in those cases the interrupt
 	 is simply ignored.*/
+
 	if ((TIM5->SR & TIM_SR_CC1IF) != 0U) {
 		chSysLockFromISR();
-
-		TIM5->SR = 0U;
+		TIM5->SR = 0;
 		chSysTimerHandlerI();
-
 		chSysUnlockFromISR();
 	}
 
+//	if ((TIM5->SR & TIM_SR_CC2IF) != 0U) {
+//		TIM5->SR &= ~TIM_SR_CC2IF;
+//		timerOverflowCount++;
+//	}
 
     //xpcc::stm32::PB15::toggle();
 	//XPCC_LOG_DEBUG .printf("tim5\n");

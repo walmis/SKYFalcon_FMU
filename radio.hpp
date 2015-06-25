@@ -13,6 +13,8 @@
 #include <RH_RF22.h>
 #include "AP_Radio.hpp"
 
+using namespace xpcc::stm32;
+
 enum PacketType {
 	PACKET_RC = 100,
 	PACKET_RF_PARAM_SET,
@@ -45,9 +47,9 @@ struct RCPacket : Packet {
 	uint16_t channels[16];
 } __attribute__((packed));
 
-class Radio final : chibios_rt::BaseStaticThread<512>, public RH_RF22, public BufferedIODevice {
+
+class Radio : public RH_RF22, public BufferedIODevice {
 public:
-	typedef chibios_rt::BaseStaticThread<512> Thread;
 
 	Radio() : RH_RF22(nRadioSel::Id, RadioIrq::Id),
 			BufferedIODevice(256, 256) {}
@@ -105,9 +107,14 @@ public:
     friend class CmdTerminal;
 
     static const struct AP_Param::GroupInfo var_info[];
+
+    static void _irq_entry(void* arg);
+    static void _main_entry(void* arg);
+
+    void irqTask();
+    void mainTask();
 protected:
 
-    void main() override;
 
     void handleInterrupt() override;
 
@@ -116,7 +123,8 @@ protected:
 	void handleReset() override;
 	bool sendAck(Packet* inPkt);
 
-	xpcc::Event int_event;
+	xpcc::Event irqEvent;
+	xpcc::Event dataEvent;
 
 	uint8_t txBuf[255];
 	uint8_t dataLen		= 0; //packet size
@@ -145,10 +153,16 @@ protected:
     }
 
 private:
+    THD_WORKING_AREA(_irq_wa, 256);
+    THD_WORKING_AREA(_main_wa, 256);
 
-    uint8_t spiBurstWrite0(uint8_t reg, const uint8_t* src, uint8_t len);
-    uint8_t spiBurstRead0(uint8_t reg, uint8_t* dest, uint8_t len);
+    uint8_t spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len);
+    uint8_t spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len);
 
+    dma::DMAStream dmarx{dma::Stream::DMA2_2};
+    dma::DMAStream dmatx{dma::Stream::DMA2_5};
+    xpcc::Event dma_txEvt;
+    xpcc::Event dma_rxEvt;
 };
 
 extern Radio radio;

@@ -304,12 +304,6 @@ inline __attribute__((always_inline)) void __ctors_init() {
 }
 
 void __early_init() {
-	//boot flag is set
-	if(RTC->BKP0R & (1<<31)) {
-
-		RTC->BKP0R &= ~(1<<31);
-		asm("bkpt");
-	}
 
 	SystemInit();
 

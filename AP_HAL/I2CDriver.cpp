@@ -2,6 +2,7 @@
 #include "AP_HAL_XPCC.h"
 #include "I2CDriver.h"
 #include <xpcc/architecture.hpp>
+#include "../pindefs.hpp"
 
 using namespace XpccHAL;
 
@@ -14,6 +15,7 @@ AP_HAL::Semaphore* I2CDriver::get_semaphore() {
 
 void I2CDriver::begin() {
 	//hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
+	busRelease(true);
 }
 
 void I2CDriver::end() {}
@@ -24,29 +26,121 @@ void I2CDriver::setHighSpeed(bool active) {}
 #define I2C xpcc::stm32::I2cMaster1
 extern const AP_HAL::HAL& hal;
 
+void I2CDriver::busReset() {
+	I2C::busReset();
+}
+
+void i2stop() {
+	Scl::set();
+	chibios_rt::BaseThread::sleep(US2ST(10));
+
+    Sda::set();
+    chibios_rt::BaseThread::sleep(US2ST(10));
+}
+
+void i2start() {
+	Sda::set();
+	Scl::set();
+
+	chibios_rt::BaseThread::sleep(US2ST(10));
+
+	Sda::reset();
+	chibios_rt::BaseThread::sleep(US2ST(10));
+
+	Scl::reset();
+	chibios_rt::BaseThread::sleep(US2ST(10));
+}
+
+void i2readbit() {
+	Sda::set();
+	Scl::set();
+	chibios_rt::BaseThread::sleep(US2ST(10));
+
+    Scl::reset();
+    chibios_rt::BaseThread::sleep(US2ST(10));
+}
+
+bool I2CDriver::busRelease(bool force) {
+	bool res = true;
+	if(!Sda::read() || force) { //sda is low
+		res = false;
+		Scl::setOutput(true); //prepare to release bus
+		Sda::setOutput(true);
+
+		for(int x = 0; x < 5; x++) {
+			i2start();
+			for(int i = 0; i < 18; i++) {
+				i2readbit();
+				if(Sda::read()) {
+					break;
+				}
+			}
+			i2stop();
+			if(Sda::read()) {
+				break;
+			}
+		}
+
+		if(!Sda::read()) {
+			XPCC_LOG_DEBUG << "failed to release bus!\n";
+		} else {
+			res = true;
+		}
+
+		Scl::setFunction(xpcc::stm32::AltFunction::AF_I2C1);
+		Sda::setFunction(xpcc::stm32::AltFunction::AF_I2C1);
+
+		busReset();
+	}
+
+	return res;
+}
+
 bool I2CDriver::startTransaction() {
+	uint8_t retry_count = 2;
+retry:
+	retry_count--;
 	if(!I2C::start(this)) {
-		XPCC_LOG_DEBUG << "e1";
+		//XPCC_LOG_DEBUG << "e1";
 		error_count++;
 		return 1;
 	}
 
-	if(!wait(5)) {
-		XPCC_LOG_DEBUG .printf("i2c Timeout (%d)\n", getState());
-		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::reset(this));
-		I2C::busReset();
+	if(!wait(3)) {
+		XPCC_LOG_DEBUG .printf("i2c Timeout (%d, %d)\n", getState(), this->errno);
+		XPCC_LOG_DEBUG .printf("I2c: CR1:%x CR2:%x SR1:%x SR2:%x\n", I2C1->CR1, I2C1->CR2, I2C1->SR1, I2C1->SR2);
+
+		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::resetTransaction(this));
+
+		busReset();
+		busRelease();
 
 		error_count++;
+
+		if(retry_count) {
+			goto retry;
+		}
 		return 1;
 	}
 
 	bool failed = getState() != xpcc::I2cWriteReadTransaction::AdapterState::Idle;
 	if(failed)  {
-		error_count++;
 
-		XPCC_LOG_DEBUG .printf("e3 %d\n", this->errno);
+		//XPCC_LOG_DEBUG .printf("e3 %d\n", this->errno);
+		if(this->errno == xpcc::I2cMaster::Error::DataNack) {
+			if(retry_count) {
+				goto retry;
+			}
+		} else
+			error_count++;
+
 		if(this->errno == xpcc::I2cMaster::Error::BusCondition) {
 			I2C::busReset();
+			busRelease();
+
+			if(retry_count) {
+				goto retry;
+			}
 		}
 
 
@@ -118,70 +212,6 @@ uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
 		return 1;
 	}
 	return startTransaction();
-}
-
-void I2CHandle::stopped(DetachCause cause) {
-
-	if(callback) {
-		callback();
-		callback = 0;
-	}
-
-	I2cWriteReadTransaction::stopped(cause);
-}
-
-I2CHandle* I2CDriver::readNonblocking(uint8_t addr, uint8_t reg,
-                              uint8_t len, uint8_t* data,
-							  AP_HAL::MemberProc callback) {
-	if(!len) return 0;
-
-	xpcc::atomic::Lock lock;
-	I2CHandle* handle = 0;
-	for(int i =0; i < 10; i++) {
-		if(handles[i] != 0 && !handles[i]->isBusy()) {
-			handle = handles[i];
-			break;
-		} else {
-			if(handles[i] == 0) {
-				handles[i] = new I2CHandle;
-				handle = handles[i];
-				break;
-			}
-		}
-	}
-	if(!handle) {
-		//XPCC_LOG_DEBUG.printf("!handle\n");
-		hal.scheduler->panic("Fatal I2c lockup. Out of available handles");
-		return 0;
-	}
-
-	data[0] = reg;
-
-	if(!handle->initialize(addr, data, 1, data, len)) {
-		error_count++;
-		return 0;
-	}
-
-	handle->callback = callback;
-
-	if(!I2C::start(handle)) {
-		error_count++;
-		return false;
-	}
-
-	return handle;
-}
-
-void I2CDriver::watchdog() {
-//	if(nb_transaction && (hal.scheduler->millis() - nb_transaction) > 500) {
-//		//lockup occurred
-//		//this is a bug, but to recover, reset i2c transaction and unlock semaphore
-//		error_count++;
-//		nb_transaction = 0;
-//		nb_callback = 0;
-//		get_semaphore()->give();
-//		XPCC_LOG_DEBUG .printf("i2c lockup\n");
-//	}
 }
 
 uint8_t I2CDriver::lockup_count() {
