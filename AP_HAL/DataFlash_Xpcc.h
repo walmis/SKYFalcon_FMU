@@ -19,27 +19,32 @@ public:
 	void main();
 
 	void startWrite(xpcc::fat::File *file);
+	void stopWrite();
 
 	bool write(uint8_t* data, size_t size);
 
-	void stopWrite();
+	bool isActive();
 
 	uint16_t bytesAvailable() {
 		return buffer.bytes_free();
 	}
 
 protected:
+	IOBuffer buffer;
+	xpcc::fat::File* file = 0;
+	xpcc::Event dataAvail;
 
 	uint8_t tmpBuffer[1024];
-	IOBuffer buffer;
-	xpcc::fat::File* file;
-	xpcc::Event dataAvail;
-	volatile bool stop;
+	uint32_t guard = 0xDEADBEEF;
+
+	volatile bool stop = false;
 };
 
-class DataFlash_Xpcc : public DataFlash_Class
+
+class DataFlash_Xpcc : public DataFlash_Backend
 {
 public:
+	DataFlash_Xpcc(DataFlash_Class &front) : DataFlash_Backend(front) {}
 
     void WriteBlock(const void *pBuffer, uint16_t size);
     uint16_t find_last_log(void);
@@ -75,19 +80,25 @@ public:
     	blockingWrites = s;
     }
 
+    bool isWriting() {
+    	return storage_lock;
+    }
+
 
 protected:
-    xpcc::fat::File *file;
-    xpcc::fat::File *read_file;
+    xpcc::fat::File *file = 0;
+    xpcc::fat::File *read_file = 0;
     DataWriterThread writer;
     chibios_rt::Mutex writeLock;
 
-    uint16_t last_log;
-    uint16_t num_logs;
+    uint16_t last_log = 0;
+    uint16_t num_logs = 0;
 
+    bool storage_lock;
     bool blockingWrites = true;
+    xpcc::Timeout<> blockingTimeout;
 };
 
-extern DataFlash_Xpcc dataflash;
+extern DataFlash_Xpcc* dataflash;
 
 

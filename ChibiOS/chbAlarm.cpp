@@ -17,8 +17,8 @@ void port_timer_init() {
 	xpcc::stm32::GPTimer5::setPrescaler(SystemCoreClock / 2000000);
 	xpcc::stm32::GPTimer5::applyAndReset();
 	xpcc::stm32::GPTimer5::start();
-	//TIM5->CNT = 1;
-	TIM5->CNT = 0xFFFFFFFF - 30000000;
+	TIM5->CNT = 1;
+	//TIM5->CNT = 0xFFFFFFFF - 30000000; //test overflow
 	TIM5->CCR2 = 0; //overflow compare
 //	//////
 

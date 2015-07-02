@@ -82,10 +82,11 @@ void HardFault_HandlerC(unsigned long *hardfault_args){
   _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
   // Bus Fault Address Register
   _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-
+#ifdef DEBUG
   asm volatile("bkpt 0");
-
-  //NVIC_SystemReset();
+#else
+  NVIC_SystemReset();
+#endif
 }
 extern "C"
 void FPU_handlerC(uint32_t* stk) {
@@ -157,7 +158,7 @@ extern "C" __attribute((naked)) void HardFault_Handler(void)
 	  "_HALT:              \n"
 	    " ldr r1,[r0,#20]  \n"
 	    " b HardFault_HandlerC \n"
-	    " bkpt #0          \n"
+	   // " bkpt #0          \n"
 	  );
 }
 //extern "C" void UsageFault_Handler(void)

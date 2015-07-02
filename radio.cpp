@@ -177,7 +177,7 @@ bool Radio::init() {
 	setModeRx();
 	XPCC_LOG_DEBUG .printf("Radio initialized (f:%d)\n", radio_cfg.frequency.get());
 
-	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+1, _irq_entry, this);
+	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+3, _irq_entry, this);
 	thread_t* tmain = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO, _main_entry, this);
 
 
@@ -186,8 +186,6 @@ bool Radio::init() {
 
 
 bool Radio::sendAck(Packet* inPkt) {
-
-	uint16_t txavail = txbuf.bytes_used();
 	Packet* out = (Packet*)txBuf;
 
 	if((uint16_t)radio_cfg.maxFragment > (RH_RF22_MAX_MESSAGE_LEN - sizeof(Packet))) {
@@ -199,23 +197,23 @@ bool Radio::sendAck(Packet* inPkt) {
 
 	out->noise = getNoiseFloor();
 	out->rssi = getRssi();
-
+	//if last sent packet was a data packet, retry transmission
 	if(inPkt->ackSeq != seq && out->id == PACKET_DATA) {
 		//retry last data transmission
-		printf("Retry\n");
+		printf("Retry id:%d len:%d\n", out->id, dataLen);
 		out->seq = ++seq;
 		out->ackSeq = inPkt->seq;
 
 		RH_RF22::send(txBuf, dataLen);
 	} else {
-
+		uint16_t txavail = txbuf.bytes_used();
 		out->seq = ++seq;
 		out->ackSeq = inPkt->seq; //acknowledge received packet
 		out->id = PACKET_DATA;
 
-		if((txavail >= maxFrag) || (latencyTimer.isExpired() && txavail)) {
-
+		if(txavail) {
 			uint8_t* buf = txBuf + sizeof(Packet);
+
 			for(int i = 0; i < std::min(maxFrag, txavail); i++) {
 				*buf++ = popTx();
 			}

@@ -7,9 +7,13 @@
 
 #include "ch.h"
 #include "malloc.h"
+#include "string.h"
 
 void* malloc(size_t size) {
-	return chHeapAlloc(NULL, size);
+	void* alloc = chHeapAlloc(NULL, size);
+	if(!alloc) return alloc;
+	memset(alloc, 0, size);
+	return alloc;
 }
 
 void free(void* ptr) {

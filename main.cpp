@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "AP_HAL/DataFlash_Xpcc.h"
-
+#include "AP_HAL/Storage.h"
 #include <xpcc/architecture.hpp>
 #include <xpcc/processing.hpp>
 #include <xpcc/debug.hpp>
@@ -54,9 +54,8 @@
 
 #include <ch.hpp>
 
-
-BufferedUart<stm32::Usart2> uart2(57600, 128, 128);
-BufferedUart<stm32::Usart1> uart1(230400, 16, 128);
+BufferedUart<stm32::Usart2> uart2(57600, 256, 128);
+BufferedUart<stm32::Usart1> uart1(230400, 256, 128);
 BufferedUart<stm32::Usart6> uartGps(38400, 128, 128);
 
 xpcc::log::Logger xpcc::log::debug(uart1);
@@ -64,13 +63,23 @@ xpcc::log::Logger xpcc::log::error(uart1);
 xpcc::log::Logger xpcc::log::info(uart1);
 xpcc::log::Logger xpcc::log::warning(uart1);
 
-
 SDCardVolume<stm32::SDIO_SDCard> sdCard;
 
 fat::FileSystem fs(&sdCard);
-USBMSD_VolumeHandler msd_handler(&sdCard, 2048);
 
-//USBSerial usb;
+class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
+	using USBMSD_VolumeHandler::USBMSD_VolumeHandler;
+
+	int disk_status() override {
+		if(!dataflash || dataflash->isWriting()) {
+			return NO_DISK;
+		} else {
+			return USBMSD_VolumeHandler::disk_status();
+		}
+	}
+};
+
+USBMSD_HandlerWrapper msd_handler(&sdCard, 2048);
 USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
 
 
@@ -116,13 +125,9 @@ public:
 
 DFU dfu;
 
-//IOStream usbserial(usb);
-//USBCDCMSD<USBMSD_VolumeHandler> usb(0xFFFF, 0x5678, 0, &sdCard);
-
-
 Radio radio;
 
-bool storage_lock;
+
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -135,8 +140,7 @@ void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 
 bool XpccHAL::GPIO::usb_connected(void)
 {
-	return false;
-	//return !usb.suspended();
+	return !usb.suspended();
 }
 
 extern "C"
@@ -242,32 +246,7 @@ void dbgtgl(uint8_t i) {
 	PB15::toggle();
 }
 
-//
-//class ChTask_Base {
-//
-//public:
-//	ChTask_Base(void* stack, size_t stacksize);
-//
-//
-//protected:
-//	virtual void run() = 0;
-//	void _yield(uint16_t timeAvailable);
-//
-//	void _handleTick();
-//
-//	void _thread() {
-//		while(1) {
-//			run();
-//		}
-//	}
-//
-//	void* sp;
-//	void* stack;
-//	uint16_t stacksize;
-//	xpcc::Timestamp sleep_timeout;
-//	uint8_t flags;
-//};
-
+#ifdef DEBUG
 template <typename Task, size_t stack_size>
 class ChTask : public Task, chibios_rt::BaseStaticThread<stack_size> {
 public:
@@ -511,6 +490,9 @@ class T2: TickerTask {
 
 			}
 
+			if(c == '>') {
+				((XpccHAL::Storage*)hal.storage)->block_cache.dump();
+			}
 			if(c == '*') {
 				volatile float testas = 0.45f;
 				testas /= 0.0f;
@@ -566,7 +548,7 @@ class T2: TickerTask {
 };
 
 T2 test;
-
+#endif
 
 class USBStorage : chibios_rt::BaseStaticThread<512> {
 public:
@@ -592,14 +574,12 @@ USBStorage usb_storage_task;
 extern void setup();
 extern void loop();
 
-
-
 int main() {
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);
 
 	//wait for devices to settle
-	sleep(20);
+	sleep(30);
 
 	//SDIO pins
 	SD_LowLevel_init();
@@ -651,11 +631,15 @@ int main() {
 
 	//NVIC_EnableIRQ(FPU_IRQn);
 	//NVIC_SetPriority(FPU_IRQn, 0);
-
 	setup();
 
-	//turn off blocking writes after format data is written
-	dataflash.setBlockingWrites(false);
+	IWDG->KR = 0x5555;
+	IWDG->PR = 0x3;
+	IWDG->KR = 0x5555;
+	IWDG->RLR = 0xFFF; //4096ms timeout
+
+	IWDG->KR = 0xCCCC; //start the watchdog
+
 
 	for(;;) {
 		//dbgset();
@@ -668,6 +652,10 @@ int main() {
 			sleep(100);
 			hal.scheduler->reboot(true);
 		}
+//		static PeriodicTimer<> t(1000);
+//		if(t.isExpired()) {
+//			printf("%d\n", usb.suspended());
+//		}
 	}
 
 }

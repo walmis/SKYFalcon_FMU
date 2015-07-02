@@ -20,20 +20,17 @@ using namespace xpcc;
 
 extern const AP_HAL::HAL& hal;
 extern xpcc::fat::FileSystem fs;
-extern volatile bool storage_lock;
 
 #define MAX_LOG_FILES 500U
 #define DATAFLASH_PAGE_SIZE 1024UL
 
-
-
 void DataWriterThread::main() {
-	if(!buffer.allocate(1024*8)) {
+	if(!buffer.allocate(16*1024)) {
 		hal.scheduler->panic("Failed to allocate logger buffer");
 	}
 
 	while(1) {
-		static PeriodicTimer<> t(500);
+		static PeriodicTimer<> fsync_timeout(500);
 		//wait for data
 		dataAvail.wait(500);
 		if(stop) {
@@ -41,37 +38,70 @@ void DataWriterThread::main() {
 			stop = false;
 		}
 
-		if(file && storage_lock) {
-			while(buffer.bytes_used() >= sizeof(tmpBuffer)) {
+		if(file) {
+			static uint16_t written;
+
+			while((buffer.bytes_used() >= sizeof(tmpBuffer))) {
 				LedRed::set();
 				int16_t n_read = buffer.read(tmpBuffer, sizeof(tmpBuffer));
+
+				if(n_read > sizeof(tmpBuffer)) {
+					XPCC_LOG_DEBUG .printf("n_read > sizeof(tmpBuffer)\n");
+					while(1);
+				}
+
+				if(guard != 0xDEADBEEF) {
+					XPCC_LOG_DEBUG .printf("buffer overflow\n");
+#ifdef DEBUG
+					while(1);
+#endif
+					return;
+				}
+
 				if(n_read > 0) {
-					if(file->write(tmpBuffer, n_read) == -1) {
+					if(file->write(tmpBuffer, n_read) == (size_t)-1) {
 						//error
 						hal.console->print("Dataflash write error\n");
 						file = 0;
 						stopWrite();
 						LedRed::reset();
-						continue;
+						break;
 					}
+					written += n_read;
+				}
+				if(written >= 16384 || fsync_timeout.isExpired()) {
+					fsync_timeout.restart();
+					file->flush();
+					written = 0;
 				}
 				LedRed::reset();
 			}
-			if(t.isExpired()) {
-				file->flush();
-			}
+//			if(t.isExpired()) {
+//				file->flush();
+//			}
 		}
 	}
 }
 
-void DataWriterThread::startWrite(xpcc::fat::File *new_file) {
-	file = new_file;
+bool DataWriterThread::isActive() {
+	return file != 0;
+}
 
+void DataWriterThread::startWrite(xpcc::fat::File *new_file) {
+	stopWrite();
+
+	file = new_file;
 }
 
 
 void DataWriterThread::stopWrite() {
 	stop = true;
+
+	dataAvail.signal(); //wakeup thread
+
+	while(stop) { //wait until stopped
+		yield();
+	}
 }
 
 
@@ -98,7 +128,10 @@ bool DataWriterThread::write(uint8_t* data, size_t size) {
  */
 void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_types)
 {
-	DataFlash_Class::Init(structure, num_types);
+	DataFlash_Backend::Init(structure, num_types);
+	_writes_enabled = true;
+	log_write_started = false;
+
     XPCC_LOG_INFO << "LOG: Init\n";
 
     storage_lock = 1;
@@ -152,9 +185,7 @@ void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_type
 
     dir.close();
 
-    //if usb is connected release lock
-    if(hal.gpio->usb_connected())
-    	storage_lock = 0;
+    storage_lock = 0;
 
     writer.start(NORMALPRIO);
 }
@@ -194,7 +225,12 @@ bool DataFlash_Xpcc::NeedErase(void){
 }
 
 void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
-	if(!file)
+	if(!storage_lock && !hal.gpio->usb_connected()) {
+		storage_lock = true;
+	}
+
+
+	if(!file || !_writes_enabled || !storage_lock)
 		return;
 
 	static xpcc::PeriodicTimer<> t(1000);
@@ -205,6 +241,12 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 		XPCC_LOG_DEBUG .printf("log wr %d b/s (buf avail %d, dropped %d)\n", count,
 				writer.bytesAvailable(), dropped);
 		count = 0;
+
+	}
+
+	if(blockingTimeout.isActive() && blockingTimeout.isExpired()) {
+		blockingWrites = false;
+		blockingTimeout.stop();
 	}
 
 	writeLock.lock();
@@ -216,18 +258,22 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 		file->close();
 
 		storage_lock = 0;
+		writeLock.unlock();
 		return;
 	}
 
-	if(storage_lock) {
-		//XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
-		bool res = 0;
-		while(!(res = writer.write((uint8_t*)pBuffer, size)) && blockingWrites);
-
-		if(!res) {
-			dropped += size;
+	//XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
+	bool res = 0;
+	while(!(res = writer.write((uint8_t*)pBuffer, size)) && blockingWrites && writer.isActive()) {
+		if(chThdGetPriorityX() > NORMALPRIO) {
+			break;
 		}
 	}
+
+	if(!res) {
+		dropped += size;
+	}
+
 
 	writeLock.unlock();
 }
@@ -311,15 +357,16 @@ void DataFlash_Xpcc::ListAvailableLogs(AP_HAL::BetterStream* port) {
 }
 
 uint16_t DataFlash_Xpcc::start_new_log(void) {
+	setBlockingWrites(true);
+	blockingTimeout.restart(2000);
+
 	if(hal.gpio->usb_connected()) {
-		XPCC_LOG_DEBUG << "USB connected, dont start log\n";
+		XPCC_LOG_DEBUG << "LOG: USB connected, not starting log\n";
 		storage_lock = 0;
 		return 0xFFFF;
 	}
 
 	storage_lock = 1;
-
-	XPCC_LOG_DEBUG .printf("start new log\n");
 
 	if(!file) {
 		file = new xpcc::fat::File;
@@ -330,6 +377,7 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 	}
 
 	last_log++;
+	XPCC_LOG_DEBUG .printf("LOG: Starting Logging to %d.bin\n", last_log);
 
 	StringStream<32> s;
 	s << "/apm/" << last_log << ".bin";
@@ -362,5 +410,13 @@ bool DataFlash_Xpcc::CardInserted() {
 	return true;
 }
 
-DataFlash_Xpcc dataflash;
-const DataFlash_Class& dataflash_skyfalcon = dataflash;
+DataFlash_Xpcc* dataflash = 0;
+
+//exported function
+DataFlash_Backend* SKYFalcon_getDataflash(DataFlash_Class &front) {
+	if(!dataflash) {
+		dataflash = new DataFlash_Xpcc(front);
+	}
+	return dataflash;
+}
+

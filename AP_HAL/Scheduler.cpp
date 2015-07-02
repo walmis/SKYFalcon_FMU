@@ -75,7 +75,7 @@ void Scheduler::main() {
 
 	while(1) {
 		//uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
-
+		IWDG->KR = 0xAAAA; //feed the watchdog
 		//xpcc::stm32::PB13::set();
 		_run_timer_procs(true);
 		//xpcc::stm32::PB13::reset();

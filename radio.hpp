@@ -98,9 +98,6 @@ public:
     	RH_RF22::setModemConfig(cfg);
     }
 
-    const uint8_t latency = 1;
-    xpcc::Timeout<> latencyTimer;
-
     RCPacket rcData;
     xpcc::Timestamp rcPacketTimestamp;
 
