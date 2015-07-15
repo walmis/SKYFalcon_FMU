@@ -32,6 +32,7 @@
 //#include <xpcc/architecture/utils.hpp>
 
 #include <stm32f4xx.h>
+#include "stm32f4xx_flash.h"
 
 #define WEAK_ALIAS(f) __attribute__ ((weak, alias (#f)));
 #define SECTION(s) __attribute__ ((section(s)))

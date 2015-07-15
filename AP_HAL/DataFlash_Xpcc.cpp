@@ -69,9 +69,12 @@ void DataWriterThread::main() {
 					}
 					written += n_read;
 				}
-				if(written >= 16384 || fsync_timeout.isExpired()) {
-					fsync_timeout.restart();
+				if(fsync_timeout.isExpired()) {
 					file->flush();
+
+					//size_t cur = file->ftell();
+					//file->lseek(cur+written*4);
+					//file->lseek(cur);
 					written = 0;
 				}
 				LedRed::reset();
@@ -225,35 +228,37 @@ bool DataFlash_Xpcc::NeedErase(void){
 }
 
 void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
-	if(!storage_lock && !hal.gpio->usb_connected()) {
-		storage_lock = true;
-	}
+//	if(!storage_lock && !hal.gpio->usb_connected()) {
+//		storage_lock = true;
+//	}
 
 
 	if(!file || !_writes_enabled || !storage_lock)
 		return;
 
-	static xpcc::PeriodicTimer<> t(1000);
 	static uint32_t count;
 	static uint32_t dropped = 0;
 	count += size;
+//#ifdef DEBUG
+	static xpcc::PeriodicTimer<> t(1000);
 	if(t.isExpired()) {
 		XPCC_LOG_DEBUG .printf("log wr %d b/s (buf avail %d, dropped %d)\n", count,
 				writer.bytesAvailable(), dropped);
 		count = 0;
 
 	}
+//#endif
 
 	if(blockingTimeout.isActive() && blockingTimeout.isExpired()) {
 		blockingWrites = false;
 		blockingTimeout.stop();
 	}
 
-	writeLock.lock();
-
 	//if usb is connected, stop writing logs and mount msd storage
 	if(file && file->isOpened() && hal.gpio->usb_connected()) {
 		XPCC_LOG_DEBUG .printf("usb detected, stop log write\n");
+		writeLock.lock();
+
 		writer.stopWrite();
 		file->close();
 
@@ -262,6 +267,7 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 		return;
 	}
 
+	writeLock.lock();
 	//XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
 	bool res = 0;
 	while(!(res = writer.write((uint8_t*)pBuffer, size)) && blockingWrites && writer.isActive()) {
@@ -269,13 +275,12 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 			break;
 		}
 	}
+	writeLock.unlock();
 
 	if(!res) {
 		dropped += size;
 	}
 
-
-	writeLock.unlock();
 }
 
 uint16_t DataFlash_Xpcc::find_last_log(void) {
@@ -389,6 +394,13 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 		return 0xFFFF;
 	} else {
 		file->flush();
+
+		//preallocate 256kb
+		file->lseek(256*1024);
+		file->lseek(0);
+
+		file->flush();
+
 		writer.startWrite(file);
 
 		fat::File l;

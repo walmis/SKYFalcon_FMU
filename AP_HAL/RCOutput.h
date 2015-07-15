@@ -17,7 +17,8 @@ class XpccHAL::RCOutput : public AP_HAL::RCOutput {
 
 private:
     uint32_t prescale;
-    uint16_t _channels[8];
+    uint16_t freq;
+    uint16_t _channels[9];
 };
 
 #endif // __AP_HAL_EMPTY_RCOUTPUT_H__

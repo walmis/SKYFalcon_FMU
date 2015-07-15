@@ -5,8 +5,6 @@
 
 using namespace XpccHAL;
 
-const uint8_t chMap[] = {1, 2, 3, 4, 5, 6};
-
 #define TIMER_PRESCALE 10
 
 PWM_Outputs pwm;
@@ -16,11 +14,12 @@ void RCOutput::init(void* machtnichts) {
 }
 
 void RCOutput::set_freq(uint32_t chmask, uint16_t freq_hz) {
-
+	freq = freq_hz;
+	pwm.setFrequency(freq);
 }
 
 uint16_t RCOutput::get_freq(uint8_t ch) {
-
+	return freq;
 }
 
 void RCOutput::enable_ch(uint8_t ch)

@@ -56,6 +56,8 @@ public:
 
 	bool init();
 
+	bool initRadioRegisters();
+
 	bool isSendingPacket() {
 		return dataLen != 0;
 	}
@@ -84,6 +86,7 @@ public:
     	radio_cfg.frequency.set_and_save_ifchanged(f_khz);
 
     	RH_RF22::setFrequency(f_khz * 1000, afc_khz*1000);
+    	updateRegisterSentinel();
     }
 
     void setTxPower(uint8_t pow) {
@@ -98,6 +101,27 @@ public:
     	RH_RF22::setModemConfig(cfg);
     }
 
+    void updateRegisterSentinel() {
+    	regCheck.f_carrier0 = spiRead(RH_RF22_REG_77_NOMINAL_CARRIER_FREQUENCY0);
+    	regCheck.f_carrier1 = spiRead(RH_RF22_REG_76_NOMINAL_CARRIER_FREQUENCY1);
+    	regCheck.hdrCtr1 = spiRead(RH_RF22_REG_32_HEADER_CONTROL1);
+    	regCheck.hdrCtr2 = spiRead(RH_RF22_REG_33_HEADER_CONTROL2);
+    }
+
+    bool checkRegistersValid() {
+    	uint8_t f_carrier0, f_carrier1, hdrCtr1, hdrCtr2;
+
+    	f_carrier0 = spiRead(RH_RF22_REG_77_NOMINAL_CARRIER_FREQUENCY0);
+    	f_carrier1 = spiRead(RH_RF22_REG_76_NOMINAL_CARRIER_FREQUENCY1);
+    	hdrCtr1 = spiRead(RH_RF22_REG_32_HEADER_CONTROL1);
+    	hdrCtr2 = spiRead(RH_RF22_REG_33_HEADER_CONTROL2);
+
+    	return f_carrier0 == regCheck.f_carrier0 &&
+    			f_carrier1 == regCheck.f_carrier1 &&
+				hdrCtr1 == regCheck.hdrCtr1 &&
+				hdrCtr2 == regCheck.hdrCtr2;
+    }
+
     RCPacket rcData;
     xpcc::Timestamp rcPacketTimestamp;
 
@@ -110,8 +134,14 @@ public:
 
     void irqTask();
     void mainTask();
-protected:
+//protected:
 
+	struct {
+		uint8_t f_carrier0;
+		uint8_t f_carrier1;
+		uint8_t hdrCtr1;
+		uint8_t hdrCtr2;
+	} regCheck;
 
     void handleInterrupt() override;
 

@@ -32,6 +32,8 @@ HAL_XPCC::HAL_XPCC() :
         &uartDDriver,
         &uartEDriver,
         &i2cDriver,
+		nullptr,
+		nullptr,
         &spiDeviceManager,
         &analogIn,
         &storageDriver,

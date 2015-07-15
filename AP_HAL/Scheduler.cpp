@@ -27,6 +27,8 @@ void Scheduler::init(void* machtnichts)
 	Thread::start(HIGHPRIO-1);
 
 	_timer_proc_enabled = true;
+
+	xpcc::stm32::SysTickTimer::attachInterrupt(Scheduler::_failsafe_timer_event);
 }
 
 void Scheduler::delay(uint16_t ms)
@@ -47,6 +49,14 @@ void Scheduler::delay(uint16_t ms)
         }
         ms--;
     }
+}
+
+extern volatile bool dfu_detach;
+
+void Scheduler::_failsafe_timer_event() {
+	if(_failsafe) {
+		_failsafe();
+	}
 }
 
 static void restore_priority(void*) {
@@ -231,7 +241,14 @@ void Scheduler::panic(const prog_char_t *errormsg) {
     LedBlue::set();
     LedRed::set();
     LedGreen::set();
-    for(;;);
+    for(;;) {
+
+		if(dfu_detach) {
+			sleep(100);
+			hal.scheduler->reboot(true);
+		}
+
+    }
 }
 
 void Scheduler::reboot(bool hold_in_bootloader) {

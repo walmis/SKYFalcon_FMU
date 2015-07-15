@@ -35,6 +35,7 @@ public:
 		PB4::setFunction(AltFunction::AF_TIM3);
 		PB5::setFunction(AltFunction::AF_TIM3);
 		PB6::setFunction(AltFunction::AF_TIM4);
+		PB10::setFunction(AltFunction::AF_TIM2);
 
 		stm32::GPTimer2::enable();
 		stm32::GPTimer3::enable();
@@ -72,6 +73,9 @@ public:
 					stm32::GPTimer2::OutputCompareMode::Pwm, 1000);
 		stm32::GPTimer2::configureOutputChannel(2,
 					stm32::GPTimer2::OutputCompareMode::Pwm, 1000);
+		stm32::GPTimer2::configureOutputChannel(3,
+					stm32::GPTimer2::OutputCompareMode::Pwm, 1000);
+
 		stm32::GPTimer3::configureOutputChannel(1,
 					stm32::GPTimer3::OutputCompareMode::Pwm, 1000);
 		stm32::GPTimer3::configureOutputChannel(2,
@@ -114,6 +118,7 @@ public:
 			stm32::GPTimer4::setCompareValue(1, pulse);
 			break;
 		case 8:
+			stm32::GPTimer2::setCompareValue(3, pulse);
 			break;
 		}
 	}

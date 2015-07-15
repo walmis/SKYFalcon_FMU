@@ -26,6 +26,8 @@ public:
 	AP_Int16 maxFragment;
 };
 
+void logRadioError(uint8_t error_code);
+
 extern AP_Radio radio_cfg;
 
 #endif /* AP_RADIO_HPP_ */

@@ -29,7 +29,7 @@
 
 #define CDC_EPBULK_IN	EP2IN
 #define CDC_EPBULK_OUT	EP2OUT
-#define CDC_EPINT_IN	9
+#define CDC_EPINT_IN	EP3IN
 
 #define MSD_EPBULK_IN	EP1IN
 #define MSD_EPBULK_OUT	EP1OUT
@@ -67,6 +67,8 @@ SDCardVolume<stm32::SDIO_SDCard> sdCard;
 
 fat::FileSystem fs(&sdCard);
 
+volatile bool dfu_detach;
+
 class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
 	using USBMSD_VolumeHandler::USBMSD_VolumeHandler;
 
@@ -81,7 +83,6 @@ class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
 
 USBMSD_HandlerWrapper msd_handler(&sdCard, 2048);
 USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
-
 
 IOStream stream(uart1);
 
@@ -110,19 +111,17 @@ uint32_t micros()
 
 XpccHAL::UARTDriver uartADriver(&usb.serial);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
-XpccHAL::UARTDriver uartCDriver(&radio);
-XpccHAL::UARTDriver uartDDriver(0);
-XpccHAL::UARTDriver uartEDriver(&uart2);
+XpccHAL::UARTDriver uartCDriver(0);
+XpccHAL::UARTDriver uartDDriver(&uart2);
+XpccHAL::UARTDriver uartEDriver(&radio);
 XpccHAL::UARTDriver uartConsoleDriver(&uart1);
 
 class DFU final : public DFUHandler {
 public:
 	void do_detach() {
-		detach = true;
+		dfu_detach = true;
 	}
-	bool detach;
 };
-
 DFU dfu;
 
 Radio radio;
@@ -132,9 +131,12 @@ Radio radio;
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
 		uartGps.setBaud(baud);
-	}
+	} else
 	if(device == &uart2) {
 		uart2.setBaud(baud);
+	} else
+	if(device == &uart1) {
+		uart1.setBaud(baud);
 	}
 }
 
@@ -246,6 +248,8 @@ void dbgtgl(uint8_t i) {
 	PB15::toggle();
 }
 
+//#define DEBUG
+
 #ifdef DEBUG
 template <typename Task, size_t stack_size>
 class ChTask : public Task, chibios_rt::BaseStaticThread<stack_size> {
@@ -342,6 +346,10 @@ class T2: TickerTask {
 								adapter.getState());
 					}
 				}
+			}
+
+			if(c == '4') {
+				radio.reset();
 			}
 
 			if (c == 't') {
@@ -575,6 +583,7 @@ extern void setup();
 extern void loop();
 
 int main() {
+
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);
 
@@ -633,13 +642,14 @@ int main() {
 	//NVIC_SetPriority(FPU_IRQn, 0);
 	setup();
 
+#ifndef DEBUG
 	IWDG->KR = 0x5555;
 	IWDG->PR = 0x3;
 	IWDG->KR = 0x5555;
 	IWDG->RLR = 0xFFF; //4096ms timeout
 
 	IWDG->KR = 0xCCCC; //start the watchdog
-
+#endif
 
 	for(;;) {
 		//dbgset();
@@ -647,15 +657,15 @@ int main() {
 		//dbgtgl();
 		//dbgclr();
 		TickerTask::tick();
-
-		if(dfu.detach) {
-			sleep(100);
-			hal.scheduler->reboot(true);
-		}
 //		static PeriodicTimer<> t(1000);
 //		if(t.isExpired()) {
 //			printf("%d\n", usb.suspended());
 //		}
+
+		if(dfu_detach) {
+			sleep(100);
+			hal.scheduler->reboot(true);
+		}
 	}
 
 }

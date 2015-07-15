@@ -42,12 +42,24 @@ void Radio::irqTask() {
 void Radio::mainTask() {
 	chibios_rt::BaseThread::setName("Radio");
 
+	static xpcc::PeriodicTimer<> checkTimer(100);
+
 	while(1) {
 		dataEvent.wait(10);
 
-		if (!transmitting()) {
-			if (rxDataLen) {
+		if(checkTimer.isExpired()) {
+			if(!checkRegistersValid()) {
+				XPCC_LOG_DEBUG .printf("Radio register check failed, reinit!\n");
+				logRadioError(4);
+				initRadioRegisters();
+			}
+		}
 
+		if (!transmitting()) {
+			//make sure we are in RX mode always if not transmitting anything
+			setModeRx();
+
+			if (rxDataLen) {
 				noiseFloor = ((uint16_t) noiseFloor * 31 + rssiRead()) / 32;
 
 				uint8_t* buf = rxBuf;
@@ -160,8 +172,19 @@ bool Radio::init() {
 	}
 	hwInitialized = true;
 
-	if(!RH_RF22::init()) {
+	if(!initRadioRegisters()) {
 		hal.scheduler->panic("Radio init failed");
+	}
+
+	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+3, _irq_entry, this);
+	thread_t* tmain = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO, _main_entry, this);
+
+	return true;
+}
+
+bool Radio::initRadioRegisters() {
+	if(!RH_RF22::init()) {
+		return false;
 	}
 
 	radio_cfg.frequency.load();
@@ -174,16 +197,11 @@ bool Radio::init() {
 	setTxPower(radio_cfg.txPower.get());
 	setModemConfig((RH_RF22::ModemConfigChoice)radio_cfg.modemCfg.get());
 
+	updateRegisterSentinel();
+
 	setModeRx();
 	XPCC_LOG_DEBUG .printf("Radio initialized (f:%d)\n", radio_cfg.frequency.get());
-
-	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+3, _irq_entry, this);
-	thread_t* tmain = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO, _main_entry, this);
-
-
-	return true;
 }
-
 
 bool Radio::sendAck(Packet* inPkt) {
 	Packet* out = (Packet*)txBuf;
@@ -324,5 +342,7 @@ void Radio::handleTxComplete() {
 }
 
 void Radio::handleReset() {
-	XPCC_LOG_DEBUG .printf("RF22 Reset!\n");
+	XPCC_LOG_DEBUG .printf("Si4432 RADIO Reset! Reinitializing\n");
+	logRadioError(3);
+	initRadioRegisters();
 }
