@@ -32,6 +32,7 @@ public:
 private:
     bool _blocking_writes;
     xpcc::IODevice* _device;
+    uint32_t baud = 57600;
 };
 
 #endif // __AP_HAL_EMPTY_UARTDRIVER_H__

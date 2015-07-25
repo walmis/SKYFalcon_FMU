@@ -46,6 +46,12 @@ typedef xpcc::stm32::PC3 ExtGpioAdc3;
 typedef xpcc::stm32::PC4 ExtVoltage;
 typedef xpcc::stm32::PC5 ExtCurrent;
 
+typedef xpcc::stm32::PC0 ExtLedR;
+typedef xpcc::stm32::PC1 ExtLedG;
+typedef xpcc::stm32::PC2 ExtLedB;
+
+
+
 typedef xpcc::stm32::Spi1 radioSpiMaster;
 
 #endif /* PINDEFS_HPP_ */

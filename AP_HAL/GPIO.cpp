@@ -15,14 +15,15 @@ GPIO::GPIO()
 void GPIO::init()
 {}
 
-void GPIO::pinMode(uint8_t pin, uint8_t output)
+void GPIO::pinMode(uint8_t pinid, uint8_t output)
 {
-	//special pins
-	if((pin>>4) == 0x0F) {
-		return;
+	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+	if(output) {
+		xpcc::stm32::_GpioPin::setOutput(port, pin);
+	} else {
+		xpcc::stm32::_GpioPin::setInput(port, pin);
 	}
-
-
 }
 
 int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
@@ -46,39 +47,27 @@ int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
 }
 
 
-uint8_t GPIO::read(uint8_t pin) {
-	//handle LEDs
-	if(pin == 0xFF) {
+uint8_t GPIO::read(uint8_t pinid) {
+	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
 
-	}
-	if(pin == 0xFE) {
-
-	}
-	if(pin == 0xFD) {
-
-	}
-	/////
+	return xpcc::stm32::_GpioPin::read(port, pin);
 }
 
-void GPIO::write(uint8_t pin, uint8_t value)
+void GPIO::write(uint8_t pinid, uint8_t value)
 {
-	//handle LEDs
-	if(pin == 0xFF) {
-		LedBlue::set(value);
-	}
-	if(pin == 0xFE) {
-		LedRed::set(value);
-	}
-	if(pin == 0xFD) {
-		LedGreen::set(value);
-	}
-	/////
+	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
 
+	xpcc::stm32::_GpioPin::set(port, pin, value);
 }
 
-void GPIO::toggle(uint8_t pin)
+void GPIO::toggle(uint8_t pinid)
 {
-	write(pin, !read(pin));
+	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+
+	xpcc::stm32::_GpioPin::toggle(port, pin);
 }
 
 /* Alternative interface: */

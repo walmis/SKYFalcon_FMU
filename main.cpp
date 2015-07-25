@@ -56,7 +56,7 @@
 
 BufferedUart<stm32::Usart2> uart2(57600, 256, 128);
 BufferedUart<stm32::Usart1> uart1(230400, 256, 128);
-BufferedUart<stm32::Usart6> uartGps(38400, 128, 128);
+BufferedUart<stm32::Usart6> uartGps(57600, 64, 256);
 
 xpcc::log::Logger xpcc::log::debug(uart1);
 xpcc::log::Logger xpcc::log::error(uart1);
@@ -126,18 +126,16 @@ DFU dfu;
 
 Radio radio;
 
-
-
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
 		uartGps.setBaud(baud);
 	} else
 	if(device == &uart2) {
 		uart2.setBaud(baud);
-	} else
+	} /*else
 	if(device == &uart1) {
 		uart1.setBaud(baud);
-	}
+	}*/
 }
 
 bool XpccHAL::GPIO::usb_connected(void)
@@ -633,9 +631,6 @@ int main() {
 
 	radio.init();
 
-	TickerTask::tasksInit();
-	//TickerTask::tasksRun();
-
 	usb.connect();
 
 	//NVIC_EnableIRQ(FPU_IRQn);
@@ -656,7 +651,7 @@ int main() {
 		loop();
 		//dbgtgl();
 		//dbgclr();
-		TickerTask::tick();
+		sdCard.update();
 //		static PeriodicTimer<> t(1000);
 //		if(t.isExpired()) {
 //			printf("%d\n", usb.suspended());

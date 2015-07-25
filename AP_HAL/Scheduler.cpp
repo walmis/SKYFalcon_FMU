@@ -59,18 +59,9 @@ void Scheduler::_failsafe_timer_event() {
 	}
 }
 
-static void restore_priority(void*) {
-	chibios_rt::System::lockFromIsr();
-	ch.mainthread.p_prio = NORMALPRIO;
-	//ch.mainthread.p_realprio = NORMALPRIO;
-	chibios_rt::System::unlockFromIsr();
-}
 
 void Scheduler::delay_microseconds_boost(uint16_t us) {
 	if(us == 0) return;
-
-	static virtual_timer_t timer;
-
 	//chibios_rt::BaseThread::setPriority(HIGHPRIO);
 	//ch.mainthread.p_prio = HIGHPRIO;
 	chibios_rt::BaseThread::sleep(us);
@@ -195,11 +186,6 @@ void Scheduler::_run_timer_procs(bool called_from_isr)
             	_timer_proc[i]();
             }
         }
-//        for (int i = 0; i < last_proc_id; i++) {
-//            if (_timer_proc[i] != NULL) {
-//                _timer_proc[i]();
-//            }
-//        }
 
         //last_proc_id++;
         //if(last_proc_id >= _num_timer_procs) last_proc_id = 0;

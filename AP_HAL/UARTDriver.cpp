@@ -9,17 +9,22 @@ extern const AP_HAL::HAL& hal;
 UARTDriver::UARTDriver(xpcc::IODevice* device) :
 	_device(device), _blocking_writes(1)
 {
-
+	if(_device)
+		setBaud(baud, _device);
 }
 
 void UARTDriver::begin(uint32_t b) {
-	if(_device)
+	if(_device && baud != b) {
 		setBaud(b, _device);
+		baud = b;
+	}
 }
 
 void UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS) {
-	if(_device)
+	if(_device && b != baud) {
 		setBaud(b, _device);
+		baud = b;
+	}
 }
 
 void UARTDriver::end() {

@@ -408,6 +408,7 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 		l << last_log;
 		l.close();
 	}
+	log_write_started = true;
 
 	return last_log;
 }

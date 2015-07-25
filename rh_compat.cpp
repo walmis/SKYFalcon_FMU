@@ -59,10 +59,10 @@ void pinMode(uint8_t pin, WiringPinMode mode) {
 
 	switch(mode) {
 	case WiringPinMode::OUTPUT:
-		_GpioPin::setOutput(IDToPort(pin), IDToPin(pin));
+		_GpioPin::setOutput(GPIO_IDToPort(pin), GPIO_IDToPin(pin));
 		break;
 	case WiringPinMode::INPUT:
-		_GpioPin::setInput(IDToPort(pin), IDToPin(pin));
+		_GpioPin::setInput(GPIO_IDToPort(pin), GPIO_IDToPin(pin));
 		break;
 	default:
 		return;
@@ -70,15 +70,15 @@ void pinMode(uint8_t pin, WiringPinMode mode) {
 }
 
 void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
-	_GpioPin::attachInterrupt(IDToPort(pin), IDToPin(pin), fn, xpcc::IntEdge::FALLING_EDGE);
+	_GpioPin::attachInterrupt(GPIO_IDToPort(pin), GPIO_IDToPin(pin), fn, xpcc::IntEdge::FALLING_EDGE);
 }
 
 void digitalWrite(uint8_t pin, uint8_t val) {
-	_GpioPin::set(IDToPort(pin), IDToPin(pin), val);
+	_GpioPin::set(GPIO_IDToPort(pin), GPIO_IDToPin(pin), val);
 }
 
 uint8_t digitalRead(uint8_t pin) {
-	_GpioPin::read(IDToPort(pin), IDToPin(pin));
+	_GpioPin::read(GPIO_IDToPort(pin), GPIO_IDToPin(pin));
 	return 0;
 }
 
