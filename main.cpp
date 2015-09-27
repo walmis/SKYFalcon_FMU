@@ -23,7 +23,14 @@
 #include <xpcc/debug.hpp>
 #include <math.h>
 
-#define USB_PRODUCT_STRING		"SKY.Falcon FMU"
+#include <../ArduCopter/APM_Config.h>
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+#define VERSION "APM:Copter V3.3 Build: " __DATE__ " " __TIME__
+
+#define USB_PRODUCT_STRING		"SKY.Falcon FMU (" VERSION " " xstr(FRAME_CONFIG) ")"
 #define USB_MANUFACTURER_STRING	"SKYVideo.pro"
 #define USB_SERIAL_STRING		"0001"
 
@@ -84,7 +91,9 @@ class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
 USBMSD_HandlerWrapper msd_handler(&sdCard, 2048);
 USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
 
+#ifdef DEBUG
 IOStream stream(uart1);
+#endif
 
 const AP_HAL::HAL& hal = AP_HAL_XPCC;
 //extern const AP_HAL::HAL& hal;
@@ -111,7 +120,11 @@ uint32_t micros()
 
 XpccHAL::UARTDriver uartADriver(&usb.serial);
 XpccHAL::UARTDriver uartBDriver(&uartGps);
+#ifndef DEBUG
+XpccHAL::UARTDriver uartCDriver(&uart1);
+#else
 XpccHAL::UARTDriver uartCDriver(0);
+#endif
 XpccHAL::UARTDriver uartDDriver(&uart2);
 XpccHAL::UARTDriver uartEDriver(&radio);
 XpccHAL::UARTDriver uartConsoleDriver(&uart1);
@@ -132,10 +145,12 @@ void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	} else
 	if(device == &uart2) {
 		uart2.setBaud(baud);
-	} /*else
-	if(device == &uart1) {
+	}
+#ifndef DEBUG
+	else if(device == &uart1) {
 		uart1.setBaud(baud);
-	}*/
+	}
+#endif
 }
 
 bool XpccHAL::GPIO::usb_connected(void)

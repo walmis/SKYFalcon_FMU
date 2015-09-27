@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <DataFlash.h>
+#include <DataFlash/DataFlash_Backend.h>
 #include <xpcc/processing.hpp>
 #include <xpcc/driver/storage/fat.hpp>
 
@@ -84,6 +84,10 @@ public:
     	return storage_lock;
     }
 
+    bool NeedPrep();
+    void Prep();
+    bool WritePrioritisedBlock(const void *pBuffer, uint16_t size, bool is_critical);
+    uint16_t bufferspace_available();
 
 protected:
     xpcc::fat::File *file = 0;
