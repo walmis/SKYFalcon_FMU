@@ -26,7 +26,7 @@ extern xpcc::fat::FileSystem fs;
 
 void DataWriterThread::main() {
 	if(!buffer.allocate(16*1024)) {
-		hal.scheduler->panic("Failed to allocate logger buffer");
+		AP_HAL::panic("Failed to allocate logger buffer");
 	}
 
 	while(1) {

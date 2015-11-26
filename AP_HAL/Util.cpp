@@ -12,12 +12,9 @@
 
 extern "C" uint8_t __heap_end__;
 
-uint16_t XpccHAL::Util::available_memory(void) {
+uint32_t XpccHAL::Util::available_memory(void) {
 	size_t mem = chCoreGetStatusX();
 
-	if(mem > 0xFFFF) {
-		return 0xFFFF;
-	}
 	return mem;
 }
 

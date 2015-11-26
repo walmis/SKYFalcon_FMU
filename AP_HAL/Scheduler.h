@@ -14,10 +14,10 @@ public:
     Scheduler();
     void     init(void* machtnichts);
     void     delay(uint16_t ms);
-    uint32_t millis();
-    uint32_t micros();
-    uint64_t millis64();
-    uint64_t micros64();
+    //uint32_t millis();
+    //uint32_t micros();
+    //uint64_t millis64();
+    //uint64_t micros64();
 
     void     delay_microseconds(uint16_t us);
     void	 delay_microseconds_boost(uint16_t us);
@@ -39,7 +39,7 @@ public:
     bool     system_initializing();
     void     system_initialized();
 
-    void     panic(const prog_char_t *errormsg);
+    //void     panic(const char *errormsg, ...);
     void     reboot(bool hold_in_bootloader);
 
     void	 yield();

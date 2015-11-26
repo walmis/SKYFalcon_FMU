@@ -10,7 +10,9 @@
 class HAL_XPCC final : public AP_HAL::HAL {
 public:
     HAL_XPCC();
-    void init(int argc, char * const * argv) const;
+
+    void run(int argc, char * const argv[], Callbacks* callbacks) const override;
+
 };
 
 extern const HAL_XPCC AP_HAL_XPCC;

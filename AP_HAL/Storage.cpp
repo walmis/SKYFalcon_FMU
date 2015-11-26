@@ -30,7 +30,7 @@ void Storage::init(void*)
 	//read 8k eeprom to memory
 	for(uint32_t i = 0; i < 8192; i+=128) {
 		if(!eeprom.read(i, &eeprom_block[i], 128)) {
-			hal.scheduler->panic("PANIC: Eeprom init failed\n");
+			AP_HAL::panic("PANIC: Eeprom init failed\n");
 		}
 	}
 

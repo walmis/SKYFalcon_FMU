@@ -28,7 +28,6 @@
  */
 
 #include "HAL_XPCC_Class.h"
-#include "AP_HAL_XPCC_Main.h"
 
 #endif //__AP_HAL_EMPTY_H__
 

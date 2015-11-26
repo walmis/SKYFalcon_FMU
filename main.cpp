@@ -16,6 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "AP_HAL/DataFlash_Xpcc.h"
 #include "AP_HAL/Storage.h"
 #include <xpcc/architecture.hpp>
@@ -24,6 +25,7 @@
 #include <math.h>
 
 #include <../ArduCopter/APM_Config.h>
+#include <../ArduCopter/Copter.h>
 
 #define xstr(s) str(s)
 #define str(s) #s
@@ -95,7 +97,7 @@ USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
 IOStream stream(uart1);
 #endif
 
-const AP_HAL::HAL& hal = AP_HAL_XPCC;
+//const AP_HAL::HAL& hal = AP_HAL_XPCC;
 //extern const AP_HAL::HAL& hal;
 
 void delay(uint32_t ms)
@@ -108,14 +110,16 @@ void mavlink_delay(uint32_t ms)
     hal.scheduler->delay(ms);
 }
 
+namespace RH {
 uint32_t millis()
 {
-    return hal.scheduler->millis();
+    return AP_HAL::millis();
 }
 
 uint32_t micros()
 {
-    return hal.scheduler->micros();
+    return AP_HAL::micros();
+}
 }
 
 XpccHAL::UARTDriver uartADriver(&usb.serial);
@@ -592,11 +596,9 @@ protected:
 
 USBStorage usb_storage_task;
 
-extern void setup();
-extern void loop();
 
-int main() {
-
+//extern AP_HAL::HAL::Callbacks copter;
+void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);
 
@@ -633,7 +635,12 @@ int main() {
 
 	sdCard.init();
 
-	hal.init(0, 0);
+    hal.scheduler->init(0);
+    hal.analogin->init(0);
+    hal.rcout->init(0);
+    hal.rcin->init(0);
+    hal.i2c->begin();
+    hal.storage->init(0);
 
 	NVIC_SetPriority(USART1_IRQn, 4);
 	NVIC_SetPriority(USART2_IRQn, 4);
@@ -650,7 +657,8 @@ int main() {
 
 	//NVIC_EnableIRQ(FPU_IRQn);
 	//NVIC_SetPriority(FPU_IRQn, 0);
-	setup();
+	//setup();
+	callbacks->setup();
 
 #ifndef DEBUG
 	IWDG->KR = 0x5555;
@@ -663,7 +671,7 @@ int main() {
 
 	for(;;) {
 		//dbgset();
-		loop();
+		callbacks->loop();
 		//dbgtgl();
 		//dbgclr();
 		sdCard.update();
@@ -677,5 +685,5 @@ int main() {
 			hal.scheduler->reboot(true);
 		}
 	}
-
 }
+
