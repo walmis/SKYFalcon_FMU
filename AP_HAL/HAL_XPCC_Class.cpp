@@ -1,4 +1,4 @@
-#include <AP_HAL.h>
+#include <AP_HAL/AP_HAL.h>
 
 #include "HAL_XPCC_Class.h"
 #include "AP_HAL_Empty_Private.h"

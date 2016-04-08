@@ -9,7 +9,7 @@
 #include "AP_Radio.hpp"
 
 
-#include "Copter.h"
+#include <Copter.h>
 
 #undef DISABLED
 #undef ENABLED

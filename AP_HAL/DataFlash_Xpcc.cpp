@@ -7,7 +7,7 @@
    given directory
  */
 
-#include <AP_HAL.h>
+#include <AP_HAL/AP_HAL.h>
 
 #include "DataFlash_Xpcc.h"
 #include <xpcc/architecture.hpp>
