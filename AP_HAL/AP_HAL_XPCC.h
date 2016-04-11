@@ -3,7 +3,7 @@
 #define __AP_HAL_EMPTY_H__
 
 /* Your layer exports should depend on AP_HAL.h ONLY. */
-#include <AP_HAL.h>
+#include <AP_HAL/AP_HAL.h>
 
 /**
  * Umbrella header for AP_HAL_Empty module.
@@ -28,7 +28,6 @@
  */
 
 #include "HAL_XPCC_Class.h"
-#include "AP_HAL_XPCC_Main.h"
 
 #endif //__AP_HAL_EMPTY_H__
 

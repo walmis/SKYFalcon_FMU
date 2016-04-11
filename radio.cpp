@@ -166,14 +166,14 @@ bool Radio::init() {
 		SPI1->CR2 |= SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN;
 #endif
 		if(!RH_RF22::HWinit()) {
-			hal.scheduler->panic("Radio HW init failed");
+			AP_HAL::panic("Radio HW init failed");
 			return false;
 		}
 	}
 	hwInitialized = true;
 
 	if(!initRadioRegisters()) {
-		hal.scheduler->panic("Radio init failed");
+		AP_HAL::panic("Radio init failed");
 	}
 
 	thread_t* tirq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+3, _irq_entry, this);

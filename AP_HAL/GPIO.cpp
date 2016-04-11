@@ -4,8 +4,8 @@
 using namespace XpccHAL;
 
 #include <xpcc/architecture.hpp>
-#include <AP_HAL.h>
-#include <pindefs.hpp>
+#include <AP_HAL/AP_HAL.h>
+#include "../pindefs.hpp"
 
 extern const AP_HAL::HAL& hal;
 

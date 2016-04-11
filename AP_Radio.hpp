@@ -8,7 +8,7 @@
 #ifndef AP_RADIO_HPP_
 #define AP_RADIO_HPP_
 
-#include <AP_Param.h>
+#include <AP_Param/AP_Param.h>
 
 class AP_Radio {
 public:

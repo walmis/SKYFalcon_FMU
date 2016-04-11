@@ -3,10 +3,8 @@
 	<name>SKYFalcon_FMU</name>
 	<comment></comment>
 	<projects>
-		<project>xpcc</project>
-		<project>APMLib</project>
 		<project>RadioHead</project>
-		<project>ArduCopter</project>
+		<project>xpcc</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
