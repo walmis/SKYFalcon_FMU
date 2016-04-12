@@ -3,7 +3,7 @@
 #define __AP_HAL_EMPTY_SEMAPHORE_H__
 
 #include "AP_HAL_XPCC.h"
-#include <xpcc/processing/rtos.hpp>
+#include <xpcc/processing/rtos_abstraction.hpp>
 
 class XpccHAL::Semaphore final : public AP_HAL::Semaphore {
 public:
