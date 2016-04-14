@@ -1,0 +1,6 @@
+/Release/
+/CMakeFiles
+CMakeCache.txt
+xpcc
+cmake_install.cmake
+Makefile
