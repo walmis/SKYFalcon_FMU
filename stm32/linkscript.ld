@@ -16,7 +16,7 @@ MEMORY
 
 ENTRY(Reset_Handler)
 
-EXTERN(_sbrk_r)
+/*EXTERN(_sbrk_r)*/
 EXTERN(_init)
 EXTERN(xpccFloat)
 
