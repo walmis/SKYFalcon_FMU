@@ -1,13 +1,24 @@
 cmake_minimum_required(VERSION 3.5)
+include(ExternalProject)
 
 SET(XPCC_DIR ${CMAKE_SOURCE_DIR}/../xpcc/)
 SET(PLATFORM "stm32f4")
 SET(PROJECT_NAME "SKYFalcon_FMU")
 SET(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/stm32/linkscript.ld")
 SET(XPCC_CMAKE_DEFINES "-DCHIBI_RTOS=1")
-SET(LIBRARIES "RadioHead") #additional libraries
+SET(LIBRARIES "${CMAKE_SOURCE_DIR}/../ardupilot/ArduCopter/libArduCopter.a") #additional libraries
 
-find_package(RadioHead REQUIRED)
+if(NOT DEFINED ${FRAME})
+SET(FRAME hexa)
+endif()
+
+ExternalProject_Add(ardupilot
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/../ardupilot
+    CONFIGURE_COMMAND ""
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND $(MAKE) -C ArduCopter skyfalcon-${FRAME}
+    INSTALL_COMMAND ""
+)
 
 add_definitions(
 	-DCONFIG_HAL_BOARD=HAL_BOARD_SKYFALCON
@@ -35,7 +46,7 @@ set(SOURCES
 	./AP_HAL/HAL_XPCC_Class.cpp
 	./AP_HAL/Scheduler.cpp
 	./AP_HAL/I2CDriver.cpp
-	./AP_HAL/Storage_cache.cpp
+	#./AP_HAL/Storage_cache.cpp
 	./rh_compat.cpp
 	./fault.cpp
 	./time.cpp
@@ -54,3 +65,10 @@ project(${PROJECT_NAME} CXX C)
 set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-I")
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-I")
 
+add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD
+                        COMMAND ${XPCC_OBJSIZE}
+                        ARGS    ${PROJECT_NAME}
+                        COMMENT "Generating DFU Image"
+                        VERBATIM)
+                        
+add_dependencies(xpcc ardupilot)
