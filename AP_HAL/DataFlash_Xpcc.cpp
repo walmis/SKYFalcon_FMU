@@ -26,7 +26,7 @@ extern xpcc::fat::FileSystem fs;
 
 void DataWriterThread::main() {
 	if(!buffer.allocate(16*1024)) {
-		AP_HAL::panic("Failed to allocate logger buffer");
+		hal.scheduler->panic("Failed to allocate logger buffer");
 	}
 
 	while(1) {
@@ -223,56 +223,23 @@ fat::File* DataFlash_Xpcc::openLog(uint16_t log_num, char* mode) {
 }
 
 bool DataFlash_Xpcc::NeedErase(void){
+
 	return false;
 }
-
-bool DataFlash_Xpcc::NeedPrep() {
-	return false;
-}
-
-void DataFlash_Xpcc::Prep() {
-    if (hal.util->get_soft_armed()) {
-        // do not want to do any filesystem operations while we are e.g. flying
-        return;
-    }
-}
-
-uint16_t DataFlash_Xpcc::bufferspace_available() {
-	return writer.bytesAvailable();
-}
-
-bool DataFlash_Xpcc::WritePrioritisedBlock(const void* pBuffer, uint16_t size,
-		bool is_critical) {
-
-	if(!file || !_writes_enabled || !storage_lock)
-		return false;
-
-    if (! WriteBlockCheckStartupMessages()) {
-        return false;
-    }
-
-    if(is_critical) {
-    	while(writer.bytesAvailable() < size && writer.isActive()) {
-    		yield();
-    	}
-    }
-
-    WriteBlock(pBuffer, size);
-
-}
-
 
 void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 //	if(!storage_lock && !hal.gpio->usb_connected()) {
 //		storage_lock = true;
 //	}
+
+
 	if(!file || !_writes_enabled || !storage_lock)
 		return;
 
 	static uint32_t count;
 	static uint32_t dropped = 0;
 	count += size;
-#ifdef DEBUG
+//#ifdef DEBUG
 	static xpcc::PeriodicTimer<> t(1000);
 	if(t.isExpired()) {
 		XPCC_LOG_DEBUG .printf("log wr %d b/s (buf avail %d, dropped %d)\n", count,
@@ -280,12 +247,16 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 		count = 0;
 
 	}
-#endif
+//#endif
 
+	if(blockingTimeout.isActive() && blockingTimeout.isExpired()) {
+		blockingWrites = false;
+		blockingTimeout.stop();
+	}
 
 	//if usb is connected, stop writing logs and mount msd storage
 	if(file && file->isOpened() && hal.gpio->usb_connected()) {
-		XPCC_LOG_DEBUG .printf("USB Connected, stop log write\n");
+		XPCC_LOG_DEBUG .printf("usb detected, stop log write\n");
 		writeLock.lock();
 
 		writer.stopWrite();
@@ -298,9 +269,12 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 
 	writeLock.lock();
 	//XPCC_LOG_DEBUG .printf("Dataflash: data overrun\n");
-
-	bool res = writer.write((uint8_t*)pBuffer, size);
-
+	bool res = 0;
+	while(!(res = writer.write((uint8_t*)pBuffer, size)) && blockingWrites && writer.isActive()) {
+		if(chThdGetPriorityX() > NORMALPRIO) {
+			break;
+		}
+	}
 	writeLock.unlock();
 
 	if(!res) {
@@ -388,6 +362,8 @@ void DataFlash_Xpcc::ListAvailableLogs(AP_HAL::BetterStream* port) {
 }
 
 uint16_t DataFlash_Xpcc::start_new_log(void) {
+	setBlockingWrites(true);
+	blockingTimeout.restart(2000);
 
 	if(hal.gpio->usb_connected()) {
 		XPCC_LOG_DEBUG << "LOG: USB connected, not starting log\n";
@@ -456,5 +432,4 @@ DataFlash_Backend* SKYFalcon_getDataflash(DataFlash_Class &front) {
 	}
 	return dataflash;
 }
-
 

@@ -8,7 +8,7 @@
 class XpccHAL::Util final : public AP_HAL::Util {
 public:
     bool run_debug_shell(AP_HAL::BetterStream *stream) { return false; }
-    uint32_t available_memory(void);
+    uint16_t available_memory(void);
 
     void set_system_clock(uint64_t time_utc_usec) override;
 };

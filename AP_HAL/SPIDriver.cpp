@@ -14,9 +14,8 @@ AP_HAL::Semaphore* SPIDeviceDriver::get_semaphore()
     return &_semaphore;
 }
 
-bool SPIDeviceDriver::transaction(const uint8_t *tx, uint8_t *rx, uint16_t len)
+void SPIDeviceDriver::transaction(const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
-	return false;
 }
 
 
@@ -41,7 +40,7 @@ SPIDeviceManager::SPIDeviceManager()
 void SPIDeviceManager::init(void *)
 {}
 
-AP_HAL::SPIDeviceDriver* SPIDeviceManager::device(enum AP_HAL::SPIDevice, uint8_t index)
+AP_HAL::SPIDeviceDriver* SPIDeviceManager::device(enum AP_HAL::SPIDevice)
 {
     return &_device;
 }

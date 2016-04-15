@@ -97,7 +97,7 @@ USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
 IOStream stream(uart1);
 #endif
 
-//const AP_HAL::HAL& hal = AP_HAL_XPCC;
+const AP_HAL::HAL& hal = AP_HAL_XPCC;
 //extern const AP_HAL::HAL& hal;
 
 void delay(uint32_t ms)
@@ -113,12 +113,12 @@ void mavlink_delay(uint32_t ms)
 namespace RH {
 uint32_t millis()
 {
-    return AP_HAL::millis();
+    return hal.scheduler->millis();
 }
 
 uint32_t micros()
 {
-    return AP_HAL::micros();
+    return hal.scheduler->micros();
 }
 }
 
@@ -596,9 +596,11 @@ protected:
 
 USBStorage usb_storage_task;
 
+extern void setup();
+extern void loop();
 
 //extern AP_HAL::HAL::Callbacks copter;
-void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
+int main() {
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);
 
@@ -657,8 +659,8 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 
 	//NVIC_EnableIRQ(FPU_IRQn);
 	//NVIC_SetPriority(FPU_IRQn, 0);
-	//setup();
-	callbacks->setup();
+	setup();
+	//callbacks->setup();
 
 #ifndef DEBUG
 	IWDG->KR = 0x5555;
@@ -671,7 +673,8 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 
 	for(;;) {
 		//dbgset();
-		callbacks->loop();
+		//callbacks->loop();
+		loop();
 		//dbgtgl();
 		//dbgclr();
 		sdCard.update();
