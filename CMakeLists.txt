@@ -66,8 +66,10 @@ set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-I")
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-I")
 
 add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD
-                        COMMAND ${XPCC_OBJSIZE}
-                        ARGS    ${PROJECT_NAME}
+                        COMMAND cp
+                        ARGS "${PROJECT_NAME}.bin" "${PROJECT_NAME}.dfu"
+                        COMMAND dfu-suffix
+                        ARGS    -v ffff -p 32fc -a "${PROJECT_NAME}.dfu"
                         COMMENT "Generating DFU Image"
                         VERBATIM)
                         
