@@ -4,3 +4,14 @@ CMakeCache.txt
 xpcc
 cmake_install.cmake
 Makefile
+.cproject
+.directory
+.project
+SKYFalcon_FMU
+SKYFalcon_FMU.S
+SKYFalcon_FMU.bin
+SKYFalcon_FMU.dfu
+SKYFalcon_FMU.hex
+SKYFalcon_FMU_nodbg
+SOURCE_DIR-prefix/
+ardupilot-prefix/
