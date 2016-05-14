@@ -222,8 +222,12 @@ void Scheduler::system_initialized()
 }
 
 void Scheduler::panic(const prog_char_t *errormsg) {
-	XPCC_LOG_ERROR << errormsg << xpcc::endl;
-    hal.console->println_P(errormsg);
+	XPCC_LOG_ERROR << "PANIC:" << errormsg << xpcc::endl;
+
+
+	hal.console->print("PANIC:");
+    hal.console->println(errormsg);
+
     LedBlue::set();
     LedRed::set();
     LedGreen::set();

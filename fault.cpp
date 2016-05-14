@@ -7,7 +7,7 @@
 
 #include <xpcc/debug.hpp>
 #include <xpcc/architecture.hpp>
-
+#include "pindefs.hpp"
 
 enum { r0, r1, r2, r3, r12, lr, pc, psr};
 
@@ -39,6 +39,8 @@ void dump(uint32_t* msp, uint32_t* psp) {
 
 extern "C"
 void HardFault_HandlerC(unsigned long *hardfault_args){
+	LedRed::set();
+
   volatile unsigned long stacked_r0 ;
   volatile unsigned long stacked_r1 ;
   volatile unsigned long stacked_r2 ;
@@ -82,11 +84,13 @@ void HardFault_HandlerC(unsigned long *hardfault_args){
   _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
   // Bus Fault Address Register
   _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-#ifdef DEBUG
-  asm volatile("bkpt 0");
-#else
-  NVIC_SystemReset();
-#endif
+//#ifdef DEBUG
+  //asm volatile("bkpt 0");
+//#else
+  //NVIC_SystemReset();
+//#endif
+
+  while(1);
 }
 extern "C"
 void FPU_handlerC(uint32_t* stk) {

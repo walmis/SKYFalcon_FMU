@@ -25,7 +25,7 @@ extern xpcc::fat::FileSystem fs;
 #define DATAFLASH_PAGE_SIZE 1024UL
 
 void DataWriterThread::main() {
-	if(!buffer.allocate(16*1024)) {
+	if(!buffer.allocate(8*1024)) {
 		hal.scheduler->panic("Failed to allocate logger buffer");
 	}
 
@@ -395,8 +395,8 @@ uint16_t DataFlash_Xpcc::start_new_log(void) {
 	} else {
 		file->flush();
 
-		//preallocate 256kb
-		file->lseek(256*1024);
+		//preallocate 2MB
+		file->lseek(2048*1024);
 		file->lseek(0);
 
 		file->flush();

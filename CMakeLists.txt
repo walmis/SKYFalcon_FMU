@@ -9,14 +9,16 @@ SET(XPCC_CMAKE_DEFINES "-DCHIBI_RTOS=1")
 SET(LIBRARIES "${CMAKE_SOURCE_DIR}/../ardupilot/ArduCopter/libArduCopter.a") #additional libraries
 
 if(NOT DEFINED ${FRAME})
-SET(FRAME hexa)
+SET(FRAME quad)
 endif()
+
+SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon-${FRAME})
 
 ExternalProject_Add(ardupilot
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/../ardupilot
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND $(MAKE) -C ArduCopter skyfalcon-${FRAME}
+    BUILD_COMMAND ${ARDUPILOT_MAKE}
     INSTALL_COMMAND ""
 )
 
@@ -27,6 +29,12 @@ add_definitions(
 include_directories(
 ../ardupilot/ArduCopter
 ../ardupilot/libraries
+)
+
+add_custom_target(
+   ardupilot_make
+   COMMAND ${ARDUPILOT_MAKE}
+   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../ardupilot
 )
 
 set(SOURCES
@@ -73,4 +81,4 @@ add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD
                         COMMENT "Generating DFU Image"
                         VERBATIM)
                         
-add_dependencies(xpcc ardupilot)
+add_dependencies(xpcc ardupilot ardupilot_make)

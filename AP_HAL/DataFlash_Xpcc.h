@@ -34,7 +34,7 @@ protected:
 	xpcc::fat::File* file = 0;
 	xpcc::Event dataAvail;
 
-	uint8_t tmpBuffer[1024];
+	uint8_t tmpBuffer[6*1024];
 	uint32_t guard = 0xDEADBEEF;
 
 	volatile bool stop = false;

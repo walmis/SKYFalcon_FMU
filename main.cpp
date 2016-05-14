@@ -630,19 +630,12 @@ int main() {
 	PB15::setOutput(0);
 	PB13::setOutput(0);
 
-	XPCC_LOG_DEBUG << "Init Board\n";
+	XPCC_LOG_DEBUG << "\n\n --- Init Board ---\n\n";
 	XPCC_LOG_DEBUG .printf("fAPB1 %d\n", Clocks::getPCLK1Frequency());
 	XPCC_LOG_DEBUG .printf("fAPB2 %d\n", Clocks::getPCLK2Frequency());
 	XPCC_LOG_DEBUG .printf("fAHB %d\n", Clocks::getHCLKFrequency());
 
 	sdCard.init();
-
-    hal.scheduler->init(0);
-    hal.analogin->init(0);
-    hal.rcout->init(0);
-    hal.rcin->init(0);
-    hal.i2c->begin();
-    hal.storage->init(0);
 
 	NVIC_SetPriority(USART1_IRQn, 4);
 	NVIC_SetPriority(USART2_IRQn, 4);
@@ -656,6 +649,8 @@ int main() {
 	radio.init();
 
 	usb.connect();
+
+	hal.init(0,0);
 
 	//NVIC_EnableIRQ(FPU_IRQn);
 	//NVIC_SetPriority(FPU_IRQn, 0);
