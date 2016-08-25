@@ -5,18 +5,16 @@
  *      Author: walmis
  */
 
+#include "../HAL/Util.h"
+
 #include <xpcc/architecture.hpp>
-#include "Util.h"
 #include <unistd.h>
 #include <sys/time.h>
 
 extern "C" uint8_t __heap_end__;
 
-uint16_t XpccHAL::Util::available_memory(void) {
+uint32_t XpccHAL::Util::available_memory(void) {
 	size_t mem = chCoreGetStatusX();
-	if(mem > 0xFFFF)
-		return 0xFFFF;
-
 	return mem;
 }
 
@@ -28,3 +26,7 @@ void XpccHAL::Util::set_system_clock(uint64_t time_utc_usec)  {
 	settimeofday(&tv, 0);
 }
 
+extern "C"
+int clock_gettime (clockid_t __clock_id, struct timespec *__tp) {
+	return 0;
+}

@@ -44,7 +44,8 @@ protected:
 class DataFlash_Xpcc : public DataFlash_Backend
 {
 public:
-	DataFlash_Xpcc(DataFlash_Class &front) : DataFlash_Backend(front) {}
+	DataFlash_Xpcc(DataFlash_Class &front,
+			class DFMessageWriter_DFLogStart *writer) : DataFlash_Backend(front, writer) {}
 
     void WriteBlock(const void *pBuffer, uint16_t size);
     uint16_t find_last_log(void);
@@ -52,6 +53,7 @@ public:
     void get_log_info(uint16_t log_num, uint32_t &size, uint32_t &time_utc);
     int16_t get_log_data(uint16_t log_num, uint16_t page, uint32_t offset, uint16_t len, uint8_t *data);
     uint16_t get_num_logs(void);
+    void stop_logging();
 
     void LogReadProcess(uint16_t log_num,
 				uint16_t start_page, uint16_t end_page,
@@ -65,7 +67,7 @@ public:
 
     xpcc::fat::File* openLog(uint16_t log_num, char* mode);
 
-    void        Init(const struct LogStructure *structure, uint8_t num_types);
+    void        Init();
     void        ReadManufacturerID();
     bool        CardInserted();
 

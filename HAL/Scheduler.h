@@ -2,7 +2,7 @@
 #ifndef __AP_HAL_EMPTY_SCHEDULER_H__
 #define __AP_HAL_EMPTY_SCHEDULER_H__
 
-#include "AP_HAL_XPCC.h"
+#include "../HAL/AP_HAL_XPCC.h"
 
 #define MAX_TIMER_PROCS 4
 
@@ -12,12 +12,8 @@ class XpccHAL::Scheduler final : public AP_HAL::Scheduler,
 	typedef chibios_rt::BaseStaticThread<512> Thread;
 public:
     Scheduler();
-    void     init(void* machtnichts);
+    void     init();
     void     delay(uint16_t ms);
-    uint32_t millis();
-    uint32_t micros();
-    uint64_t millis64();
-    uint64_t micros64();
 
     void     delay_microseconds(uint16_t us);
     void	 delay_microseconds_boost(uint16_t us);
@@ -39,7 +35,6 @@ public:
     bool     system_initializing();
     void     system_initialized();
 
-    void     panic(const prog_char_t *errormsg);
     void     reboot(bool hold_in_bootloader);
 
     void	 yield();

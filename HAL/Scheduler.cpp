@@ -18,7 +18,7 @@ volatile uint8_t   Scheduler::_num_timer_procs = 0;
 Scheduler::Scheduler()
 {}
 
-void Scheduler::init(void* machtnichts)
+void Scheduler::init()
 {
 	MpuInt::attachInterrupt([this]() {
 		mpu6k_evt.signal();
@@ -35,23 +35,23 @@ void Scheduler::delay(uint16_t ms)
 {
 	if(ms == 0) return;
 
-	uint32_t start = micros();
+	uint32_t start = AP_HAL::micros();
     while (ms > 0) {
-    	uint32_t nextTimeout = micros() + 1000;
+    	uint32_t nextTimeout = AP_HAL::micros() + 1000;
 
         if (_min_delay_cb_ms <= ms) {
             if (_delay_proc) {
             	_delay_proc();
             }
         }
-        if(micros() < nextTimeout) {
+        if(AP_HAL::micros() < nextTimeout) {
         	chibios_rt::BaseThread::sleepUntil(nextTimeout);
         }
         ms--;
     }
 }
 
-extern volatile bool dfu_detach;
+
 
 void Scheduler::_failsafe_timer_event() {
 	if(_failsafe) {
@@ -85,33 +85,6 @@ void Scheduler::main() {
 	}
 }
 
-uint32_t Scheduler::millis() {
-    return xpcc::Clock::now().getTime();
-}
-
-uint32_t Scheduler::micros() {
-    return chibios_rt::System::getTimeX();
-}
-
-uint64_t Scheduler::millis64() {
-    return xpcc::Clock::now().getTime();
-}
-
-uint64_t Scheduler::micros64() {
-	__disable_irq();
-	static uint32_t last_time;
-	static uint32_t thigh = 0;
-	uint32_t time = chibios_rt::System::getTimeX();
-	//handle timer overflow
-	if(time < last_time) {
-		thigh++;
-	}
-	last_time = time;
-
-    uint64_t ret = ((uint64_t)thigh)<<32 | time ;
-    __enable_irq();
-    return ret;
-}
 
 void Scheduler::delay_microseconds(uint16_t us)
 {
@@ -142,7 +115,7 @@ void Scheduler::register_timer_process(AP_HAL::MemberProc proc)
         /* _num_timer_procs is used from interrupt, and multiple bytes long. */
         _num_timer_procs++;
     } else {
-    	panic("Failed to register timer proc\n");
+    	AP_HAL::panic("Failed to register timer proc\n");
     }
 }
 
@@ -221,25 +194,7 @@ void Scheduler::system_initialized()
 
 }
 
-void Scheduler::panic(const prog_char_t *errormsg) {
-	XPCC_LOG_ERROR << "PANIC:" << errormsg << xpcc::endl;
 
-
-	hal.console->print("PANIC:");
-    hal.console->println(errormsg);
-
-    LedBlue::set();
-    LedRed::set();
-    LedGreen::set();
-    for(;;) {
-
-		if(dfu_detach) {
-			sleep(100);
-			hal.scheduler->reboot(true);
-		}
-
-    }
-}
 
 void Scheduler::reboot(bool hold_in_bootloader) {
 	if(hold_in_bootloader) {

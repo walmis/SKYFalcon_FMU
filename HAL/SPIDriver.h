@@ -2,8 +2,8 @@
 #ifndef __AP_HAL_EMPTY_SPIDRIVER_H__
 #define __AP_HAL_EMPTY_SPIDRIVER_H__
 
-#include "AP_HAL_XPCC.h"
-#include "Semaphores.h"
+#include "../HAL/AP_HAL_XPCC.h"
+#include "../HAL/Semaphores.h"
 
 class XpccHAL::SPIDeviceDriver final : public AP_HAL::SPIDeviceDriver {
 public:

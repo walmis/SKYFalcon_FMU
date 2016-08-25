@@ -2,10 +2,10 @@
 #ifndef __AP_HAL_EMPTY_RCOUTPUT_H__
 #define __AP_HAL_EMPTY_RCOUTPUT_H__
 
-#include "AP_HAL_XPCC.h"
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::RCOutput : public AP_HAL::RCOutput {
-    void     init(void* machtnichts);
+    void     init();
     void     set_freq(uint32_t chmask, uint16_t freq_hz);
     uint16_t get_freq(uint8_t ch);
     void     enable_ch(uint8_t ch);

@@ -8,7 +8,7 @@ using namespace XpccHAL;
 RCInput::RCInput()
 {}
 
-void RCInput::init(void* machtnichts)
+void RCInput::init()
 {}
 
 #define RC_ROLL 0

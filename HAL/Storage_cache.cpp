@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include "Storage.h"
-//#include <eeprom/eeprom.hpp>
 #include <xpcc/architecture.hpp>
 #include <xpcc/driver/storage/i2c_eeprom.hpp>
+
+#include "../HAL/Storage.h"
 using namespace XpccHAL;
 using namespace xpcc;
 

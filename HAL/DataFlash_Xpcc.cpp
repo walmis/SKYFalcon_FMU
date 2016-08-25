@@ -7,9 +7,10 @@
    given directory
  */
 
+#include "../HAL/DataFlash_Xpcc.h"
+
 #include <AP_HAL/AP_HAL.h>
 
-#include "DataFlash_Xpcc.h"
 #include <xpcc/architecture.hpp>
 #include <xpcc/processing.hpp>
 #include <fatfs/diskio.h>
@@ -26,7 +27,7 @@ extern xpcc::fat::FileSystem fs;
 
 void DataWriterThread::main() {
 	if(!buffer.allocate(8*1024)) {
-		hal.scheduler->panic("Failed to allocate logger buffer");
+		AP_HAL::panic("Failed to allocate logger buffer");
 	}
 
 	while(1) {
@@ -126,12 +127,22 @@ bool DataWriterThread::write(uint8_t* data, size_t size) {
 	return true;
 }
 
+void DataFlash_Xpcc::stop_logging() {
+	writeLock.lock();
+
+	writer.stopWrite();
+	file->close();
+
+	storage_lock = 0;
+	writeLock.unlock();
+}
+
 /*
   constructor
  */
-void DataFlash_Xpcc::Init(const struct LogStructure *structure, uint8_t num_types)
+void DataFlash_Xpcc::Init()
 {
-	DataFlash_Backend::Init(structure, num_types);
+	DataFlash_Backend::Init();
 	_writes_enabled = true;
 	log_write_started = false;
 
@@ -257,13 +268,7 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 	//if usb is connected, stop writing logs and mount msd storage
 	if(file && file->isOpened() && hal.gpio->usb_connected()) {
 		XPCC_LOG_DEBUG .printf("usb detected, stop log write\n");
-		writeLock.lock();
-
-		writer.stopWrite();
-		file->close();
-
-		storage_lock = 0;
-		writeLock.unlock();
+		stop_logging();
 		return;
 	}
 
@@ -426,9 +431,10 @@ bool DataFlash_Xpcc::CardInserted() {
 DataFlash_Xpcc* dataflash = 0;
 
 //exported function
-DataFlash_Backend* SKYFalcon_getDataflash(DataFlash_Class &front) {
+DataFlash_Backend* SKYFalcon_getDataflash(DataFlash_Class &front,
+		class DFMessageWriter_DFLogStart *writer) {
 	if(!dataflash) {
-		dataflash = new DataFlash_Xpcc(front);
+		dataflash = new DataFlash_Xpcc(front, writer);
 	}
 	return dataflash;
 }

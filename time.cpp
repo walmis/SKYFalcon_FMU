@@ -1,6 +1,7 @@
 #include <xpcc/architecture.hpp>
 #include <sys/time.h>
-#include "AP_HAL/AP_HAL_XPCC.h"
+
+#include "HAL/AP_HAL_XPCC.h"
 
 static uint32_t tset;
 static uint32_t timestamp;

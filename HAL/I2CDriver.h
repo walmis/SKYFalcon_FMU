@@ -2,9 +2,9 @@
 #ifndef __AP_HAL_EMPTY_I2CDRIVER_H__
 #define __AP_HAL_EMPTY_I2CDRIVER_H__
 
-#include "AP_HAL_XPCC.h"
 #include <xpcc/architecture.hpp>
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::I2CDriver : public AP_HAL::I2CDriver, xpcc::I2cWriteReadTransaction {
 public:

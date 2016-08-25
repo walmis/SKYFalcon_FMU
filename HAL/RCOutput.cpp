@@ -9,7 +9,7 @@ using namespace XpccHAL;
 
 PWM_Outputs pwm;
 
-void RCOutput::init(void* machtnichts) {
+void RCOutput::init() {
 	pwm.init();
 }
 

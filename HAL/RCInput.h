@@ -2,13 +2,13 @@
 #ifndef __AP_HAL_EMPTY_RCINPUT_H__
 #define __AP_HAL_EMPTY_RCINPUT_H__
 
-#include "AP_HAL_XPCC.h"
 #include <xpcc/architecture.hpp>
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::RCInput final : public AP_HAL::RCInput {
 public:
     RCInput();
-    void init(void* machtnichts);
+    void init();
     bool  new_input();
     uint8_t num_channels();
     uint16_t read(uint8_t ch);

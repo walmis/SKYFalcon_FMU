@@ -1,8 +1,7 @@
 
-#include <AP_HAL/AP_HAL.h>
+#include "../HAL/HAL_XPCC_Class.h"
 
-#include "HAL_XPCC_Class.h"
-#include "AP_HAL_Empty_Private.h"
+//#include <AP_HAL/AP_HAL.h>
 
 using namespace XpccHAL;
 
@@ -13,10 +12,10 @@ extern UARTDriver uartDDriver;
 extern UARTDriver uartEDriver;
 extern UARTDriver uartConsoleDriver;
 
-Semaphore  i2cSemaphore;
-I2CDriver  i2cDriver(&i2cSemaphore);
-SPIDeviceManager spiDeviceManager;
-AnalogIn analogIn;
+//Semaphore  i2cSemaphore;
+//I2CDriver  i2cDriver(&i2cSemaphore);
+//SPIDeviceManager spiDeviceManager;
+XpccHAL::AnalogIn analogIn;
 Storage storageDriver;
 GPIO gpioDriver;
 RCInput rcinDriver;
@@ -31,10 +30,9 @@ HAL_XPCC::HAL_XPCC() :
         &uartCDriver,
         &uartDDriver,
         &uartEDriver,
-        &i2cDriver,
-		nullptr,
-		nullptr,
-        &spiDeviceManager,
+		0, //uartF
+        0, //AP_HAL::I2CDeviceManager* _i2c_mgr,
+        0, // AP_HAL::SPIDeviceManager* _spi,
         &analogIn,
         &storageDriver,
         &uartConsoleDriver,
@@ -42,17 +40,19 @@ HAL_XPCC::HAL_XPCC() :
         &rcinDriver,
         &rcoutDriver,
         &schedulerInstance,
-        &utilInstance)
+        &utilInstance,
+		0 //AP_HAL::OpticalFlow
+		)
 {}
 
-void HAL_XPCC::init(int argc,char* const argv[]) const {
-    scheduler->init(0);
-    analogin->init(0);
-    rcout->init(0);
-    rcin->init(0);
-    i2c->begin();
-    storage->init(0);
+namespace AP_HAL {
+
+const HAL& get_HAL() {
+	static const HAL_XPCC hal;
+	return hal;
 }
 
-const HAL_XPCC AP_HAL_XPCC;
+}
+
+//const AP_HAL::HAL& hal = AP_HAL::get_HAL();
 

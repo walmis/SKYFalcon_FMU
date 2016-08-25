@@ -14,4 +14,4 @@ SKYFalcon_FMU.dfu
 SKYFalcon_FMU.hex
 SKYFalcon_FMU_nodbg
 SOURCE_DIR-prefix/
-ardupilot-prefix/
+ardupilot/

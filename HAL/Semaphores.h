@@ -2,8 +2,8 @@
 #ifndef __AP_HAL_EMPTY_SEMAPHORE_H__
 #define __AP_HAL_EMPTY_SEMAPHORE_H__
 
-#include "AP_HAL_XPCC.h"
 #include <xpcc/processing/rtos_abstraction.hpp>
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::Semaphore final : public AP_HAL::Semaphore {
 public:

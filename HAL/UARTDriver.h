@@ -3,7 +3,8 @@
 #define __AP_HAL_EMPTY_UARTDRIVER_H__
 
 #include <xpcc/architecture.hpp>
-#include "AP_HAL_XPCC.h"
+
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::UARTDriver final: public AP_HAL::UARTDriver {
 public:
@@ -18,8 +19,8 @@ public:
     bool tx_pending();
 
     /* Empty implementations of Stream virtual methods */
-    int16_t available();
-    int16_t txspace();
+    uint32_t available();
+    uint32_t txspace();
     int16_t read();
 
     /* Empty implementations of Print virtual methods */

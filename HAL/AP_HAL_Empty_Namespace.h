@@ -22,7 +22,6 @@ namespace XpccHAL {
     class Semaphore;
     class Scheduler;
     class Util;
-    class EmptyPrivateMember;
 }
 
 #endif // __AP_HAL_EMPTY_NAMESPACE_H__

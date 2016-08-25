@@ -45,13 +45,13 @@ void UARTDriver::set_blocking_writes(bool blocking) {
 
 bool UARTDriver::tx_pending() { return false; }
 
-int16_t UARTDriver::available() {
+uint32_t UARTDriver::available() {
 	if(!_device)
 		return 0;
 
 	return _device->rxAvailable();
 }
-int16_t UARTDriver::txspace() {
+uint32_t UARTDriver::txspace() {
 	if(!_device)
 		return -1;
 	return _device->txAvailable();

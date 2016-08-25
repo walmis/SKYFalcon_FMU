@@ -5,7 +5,7 @@
 /* Just a stub as an example of how to implement a private member of an
  * AP_HAL module */
 
-#include "AP_HAL_XPCC.h"
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::EmptyPrivateMember {
 public:

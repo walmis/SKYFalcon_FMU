@@ -2,8 +2,9 @@
 #ifndef __AP_HAL_EMPTY_ANALOGIN_H__
 #define __AP_HAL_EMPTY_ANALOGIN_H__
 
-#include "AP_HAL_XPCC.h"
+#include <xpcc/architecture.hpp>
 #include <xpcc/math/filter.hpp>
+#include "../HAL/AP_HAL_XPCC.h"
 
 class XpccHAL::AnalogSource final: public AP_HAL::AnalogSource {
 public:
@@ -36,7 +37,7 @@ private:
 class XpccHAL::AnalogIn final: public AP_HAL::AnalogIn {
 public:
     AnalogIn();
-    void init(void* implspecific);
+    void init();
     AP_HAL::AnalogSource* channel(int16_t n);
     float board_voltage(void);
 

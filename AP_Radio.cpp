@@ -15,7 +15,7 @@
 #undef ENABLED
 #undef HIGH
 #undef LOW
-#include "AP_HAL/DataFlash_Xpcc.h"
+#include "HAL/DataFlash_Xpcc.h"
 
 const AP_Param::GroupInfo AP_Radio::var_info[] {
 	    AP_GROUPINFO("FREQUENCY", 0, AP_Radio, frequency, 433000),
@@ -37,7 +37,7 @@ struct PACKED log_Error {
 void logRadioError(uint8_t error_code) {
     struct log_Error pkt = {
         LOG_PACKET_HEADER_INIT(LOG_ERROR_MSG),
-        time_us       : hal.scheduler->micros64(),
+        time_us       : AP_HAL::micros64(),
         sub_system    : ERROR_SUBSYSTEM_RADIO,
         error_code    : error_code,
     };

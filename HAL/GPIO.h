@@ -2,7 +2,7 @@
 #ifndef __AP_HAL_EMPTY_GPIO_H__
 #define __AP_HAL_EMPTY_GPIO_H__
 
-#include "AP_HAL_XPCC.h"
+#include "../HAL/AP_HAL_XPCC.h"
 
 #define GPIO_PIN(port, pin) ((pin&0x1F)|(port<<5))
 #define PORT(p) (p>>5)

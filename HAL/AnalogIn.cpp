@@ -98,7 +98,7 @@ AnalogIn::AnalogIn() :
 	}
 }
 
-void AnalogIn::init(void* machtnichts)
+void AnalogIn::init()
 {
 	Adc1::initialize();
 
