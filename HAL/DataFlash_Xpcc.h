@@ -65,7 +65,7 @@ public:
 
     uint16_t start_new_log(void);
 
-    xpcc::fat::File* openLog(uint16_t log_num, char* mode);
+    xpcc::fat::File* openLog(uint16_t log_num, const char* mode);
 
     void        Init();
     void        ReadManufacturerID();
@@ -91,6 +91,9 @@ public:
     bool WritePrioritisedBlock(const void *pBuffer, uint16_t size, bool is_critical);
     uint16_t bufferspace_available();
 
+    bool logging_enabled() const;
+    bool logging_failed() const;
+
 protected:
     xpcc::fat::File *file = 0;
     xpcc::fat::File *read_file = 0;
@@ -100,7 +103,7 @@ protected:
     uint16_t last_log = 0;
     uint16_t num_logs = 0;
 
-    bool storage_lock;
+    bool storage_lock = false;
     bool blockingWrites = true;
     xpcc::Timeout<> blockingTimeout;
 };

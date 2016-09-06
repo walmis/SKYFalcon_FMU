@@ -13,6 +13,7 @@
 #include "Scheduler.h"
 #include "Storage.h"
 #include "UARTDriver.h"
+#include "I2CDevice.h"
 
 class HAL_XPCC final : public AP_HAL::HAL {
 public:

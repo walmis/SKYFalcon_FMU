@@ -204,7 +204,7 @@ void DataFlash_Xpcc::Init()
     writer.start(NORMALPRIO);
 }
 
-fat::File* DataFlash_Xpcc::openLog(uint16_t log_num, char* mode) {
+fat::File* DataFlash_Xpcc::openLog(uint16_t log_num, const char* mode) {
 	fat::Directory dir;
 
 	dir.open("/apm");

@@ -9,9 +9,9 @@
 
 namespace XpccHAL {
     class UARTDriver;
-    class I2CDriver;
-    class SPIDeviceManager;
-    class SPIDeviceDriver;
+    class I2CDevice;
+    class I2CDeviceManager;
+
     class AnalogSource;
     class AnalogIn;
     class Storage;

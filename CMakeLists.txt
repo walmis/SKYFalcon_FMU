@@ -57,7 +57,7 @@ set(SOURCES
 	#./AP_HAL/PrivateMember.cpp
 	./HAL/HAL_XPCC_Class.cpp
 	./HAL/Scheduler.cpp
-	#./AP_HAL/I2CDriver.cpp
+	./HAL/I2CDevice.cpp
 	#./AP_HAL/Storage_cache.cpp
 	./rh_compat.cpp
 	./fault.cpp
@@ -68,7 +68,7 @@ set(SOURCES
 	./ChibiOS/malloc.c
 	./stm32/startup.c
 	./stm32/system_stm32f4xx.c
-	./stm32/stm32f4xx_flash.c
+	#./stm32/stm32f4xx_flash.c
 )
 
 include(${XPCC_DIR}/xpccProject.cmake)
@@ -78,7 +78,7 @@ project(${PROJECT_NAME} CXX C)
 set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-I")
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-I")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-math-errno")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-math-errno -Wno-non-virtual-dtor")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-math-errno")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-math-errno")
 

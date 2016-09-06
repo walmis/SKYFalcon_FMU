@@ -22,6 +22,7 @@ RCInput rcinDriver;
 RCOutput rcoutDriver;
 Scheduler schedulerInstance;
 Util utilInstance;
+XpccHAL::I2CDeviceManager i2cdev;
 
 HAL_XPCC::HAL_XPCC() :
     AP_HAL::HAL(
@@ -31,7 +32,7 @@ HAL_XPCC::HAL_XPCC() :
         &uartDDriver,
         &uartEDriver,
 		0, //uartF
-        0, //AP_HAL::I2CDeviceManager* _i2c_mgr,
+		&i2cdev, //AP_HAL::I2CDeviceManager* _i2c_mgr,
         0, // AP_HAL::SPIDeviceManager* _spi,
         &analogIn,
         &storageDriver,
