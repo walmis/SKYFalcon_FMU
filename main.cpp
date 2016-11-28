@@ -137,11 +137,6 @@ XpccHAL::UARTDriver uartDDriver(&uart2);
 XpccHAL::UARTDriver uartEDriver(&radio);
 XpccHAL::UARTDriver uartConsoleDriver(&uart1);
 
-//extern "C"
-//float sqrtf(float a) {
-//	return 0;
-//}
-
 Radio radio;
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
@@ -271,9 +266,6 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 
 	//hal.init(0,0);
 
-	//NVIC_EnableIRQ(FPU_IRQn);
-	//NVIC_SetPriority(FPU_IRQn, 0);
-	//setup();
 	callbacks->setup();
 
 	wdt_init();
@@ -285,10 +277,7 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 		//dbgtgl();
 		//dbgclr();
 		sdCard.update();
-//		static PeriodicTimer<> t(1000);
-//		if(t.isExpired()) {
-//			printf("%d\n", usb.suspended());
-//		}
+
 
 		if(DFU::dfu_detach) {
 			sleep(100);
