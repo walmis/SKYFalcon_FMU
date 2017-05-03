@@ -15,6 +15,9 @@ class XpccHAL::RCOutput : public AP_HAL::RCOutput {
     uint16_t read(uint8_t ch);
     void     read(uint16_t* period_us, uint8_t len);
 
+    void     cork();
+    void 	 push();
+
 private:
     uint32_t prescale;
     uint16_t freq;

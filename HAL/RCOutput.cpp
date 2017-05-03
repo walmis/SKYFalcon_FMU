@@ -56,3 +56,10 @@ void RCOutput::read(uint16_t* period_us, uint8_t len)
 	}
 }
 
+void RCOutput::push() {
+
+}
+
+void RCOutput::cork() {
+
+}

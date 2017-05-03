@@ -39,6 +39,12 @@ add_custom_target(
    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../ardupilot
 )
 
+add_custom_target(
+   ardupilot_clean
+   COMMAND ${ARDUPILOT_MAKE} clean
+   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../ardupilot
+)
+
 set(SOURCES
 	./radio.cpp
 	./ChibiOS/chbAlarm.cpp
