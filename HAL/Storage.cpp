@@ -29,9 +29,9 @@ void Storage::init()
 {
 	//read 8k eeprom to memory
 	for(uint32_t i = 0; i < 8192; i+=128) {
-		if(!eeprom.read(i, &eeprom_block[i], 128)) {
-			AP_HAL::panic("PANIC: Eeprom init failed\n");
-		}
+//		if(!eeprom.read(i, &eeprom_block[i], 128)) {
+//			AP_HAL::panic("PANIC: Eeprom init failed\n");
+//		}
 	}
 
 	start(NORMALPRIO-1);
@@ -56,7 +56,7 @@ void Storage::main() {
 
 		while(!op_list.isEmpty()) {
 			WriteOperation op = op_list.getFront();
-			eeprom.write(op.address, &eeprom_block[op.address], op.count);
+			//eeprom.write(op.address, &eeprom_block[op.address], op.count);
 			eeprom_lock.lock();
 			op_list.removeFront();
 			eeprom_lock.unlock();

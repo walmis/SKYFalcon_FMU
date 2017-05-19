@@ -89,7 +89,7 @@ bool I2CDevice::bitbangBusRelease(bool force) {
 }
 //
 bool I2CDevice::startTransaction() {
-	uint8_t retry_count = retries;
+	uint8_t retry_count = 3;
 retry:
 	retry_count--;
 	if(!I2C::start(this)) {
@@ -185,8 +185,9 @@ bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 		return false;
 	}
 
-	return startTransaction();
+	bool ret = startTransaction();
 
+	return ret;
 }
 
 void I2CDevice::set_address(uint8_t address) {
@@ -248,6 +249,17 @@ AP_HAL::Device::PeriodicHandle XpccHAL::I2CDevice::register_periodic_callback(
 bool XpccHAL::I2CDevice::adjust_periodic_callback(Device::PeriodicHandle h,
 		uint32_t period_usec) {
 	XPCC_LOG_DEBUG .printf("adjust periodic callback\n");
+}
+
+AP_HAL::OwnPtr<AP_HAL::I2CDevice> XpccHAL::I2CDeviceManager::get_device(
+		uint8_t bus, uint8_t address)
+{
+	if(bus == 0) {
+		auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new XpccHAL::I2CDevice);
+		dev->set_address(address);
+		return dev;
+	}
+	return nullptr;
 }
 //uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
 //{

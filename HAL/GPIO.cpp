@@ -17,13 +17,26 @@ void GPIO::init()
 
 void GPIO::pinMode(uint8_t pinid, uint8_t output)
 {
-	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
-	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
-	if(output) {
-		xpcc::stm32::_GpioPin::setOutput(port, pin);
-	} else {
-		xpcc::stm32::_GpioPin::setInput(port, pin);
+
+	switch(pinid) {
+	case 127:
+		output? LedRed::setOutput() : LedRed::setInput(); break;
+	case 128:
+		output? LedGreen::setOutput() : LedGreen::setInput(); break;
+	case 129:
+		output? LedBlue::setOutput() : LedBlue::setInput(); break;
+	default:
+		XPCC_LOG_DEBUG .printf("Unhandled pin %d\n", pinid);
 	}
+
+
+//	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+//	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+//	if(output) {
+//		xpcc::stm32::_GpioPin::setOutput(port, pin);
+//	} else {
+//		xpcc::stm32::_GpioPin::setInput(port, pin);
+//	}
 }
 
 int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
@@ -48,26 +61,52 @@ int8_t GPIO::analogPinToDigitalPin(uint8_t pin)
 
 
 uint8_t GPIO::read(uint8_t pinid) {
-	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
-	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
 
-	return xpcc::stm32::_GpioPin::read(port, pin);
+	switch(pinid) {
+	case 127:
+		return LedRed::read(); break;
+	case 128:
+		return LedGreen::read(); break;
+	case 129:
+		return LedBlue::read(); break;
+	}
+	XPCC_LOG_DEBUG .printf("Unhandled pin %d\n", pinid);
+
 }
 
 void GPIO::write(uint8_t pinid, uint8_t value)
 {
-	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
-	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+	switch(pinid) {
+	case 127:
+		LedRed::set(value); break;
+	case 128:
+		LedGreen::set(value); break;
+	case 129:
+		LedBlue::set(value); break;
+	default:
+		XPCC_LOG_DEBUG .printf("Unhandled pin %d\n", pinid);
+	}
 
-	xpcc::stm32::_GpioPin::set(port, pin, value);
+	//uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+	//uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+
+	//xpcc::stm32::_GpioPin::set(port, pin, value);
 }
 
 void GPIO::toggle(uint8_t pinid)
 {
-	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
-	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
-
-	xpcc::stm32::_GpioPin::toggle(port, pin);
+	switch(pinid) {
+	case 127:
+		LedRed::toggle(); break;
+	case 128:
+		LedGreen::toggle(); break;
+	case 129:
+		LedBlue::toggle(); break;
+	}
+//	uint8_t port = xpcc::stm32::GPIO_IDToPort(pinid);
+//	uint8_t pin = xpcc::stm32::GPIO_IDToPin(pinid);
+//
+//	xpcc::stm32::_GpioPin::toggle(port, pin);
 }
 
 /* Alternative interface: */

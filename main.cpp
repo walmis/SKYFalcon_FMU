@@ -267,6 +267,16 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 
 	I2cMaster1::setIrqPriority(5);
 
+	I2cReadTransaction test;
+	unsigned char c;
+	test.initialize(0x77, &c, 1);
+
+	I2cMaster1::start(&test);
+	test.wait();
+
+	XPCC_LOG_DEBUG .printf("test %d %d\n", test.getState(), test.error);
+
+
 	NVIC_SetPriority(OTG_FS_IRQn, 8);
 	NVIC_SetPriority(SDIO_IRQn, 8);
 

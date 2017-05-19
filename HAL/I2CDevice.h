@@ -20,6 +20,7 @@ public:
 	Timer(XpccHAL::I2CDevice* parent, int id,
 			AP_HAL::Device::PeriodicCb callback) :
 			parent(parent), id(id), period(0), callback(callback) {
+
 		chVTObjectInit(&vt);
 		XPCC_LOG_DEBUG.printf("registering timer id:%d\n", id);
 	}
@@ -105,14 +106,7 @@ private:
 class XpccHAL::I2CDeviceManager : public AP_HAL::I2CDeviceManager{
 public:
     /* Get a device handle */
-    virtual AP_HAL::OwnPtr<AP_HAL::I2CDevice> get_device(uint8_t bus, uint8_t address) {
-    	if(bus == 0) {
-    		auto dev = new XpccHAL::I2CDevice;
-    		dev->set_address(address);
-    		return dev;
-    	}
-    	return nullptr;
-    }
+    AP_HAL::OwnPtr<AP_HAL::I2CDevice> get_device(uint8_t bus, uint8_t address) override;
 };
 
 
