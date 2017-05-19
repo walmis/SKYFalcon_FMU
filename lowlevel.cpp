@@ -10,6 +10,12 @@
 using namespace xpcc;
 using namespace stm32;
 
+extern "C" float sqrtf(float);
+extern "C"
+double __ieee754_sqrt(double x) {
+	return sqrtf(x);
+}
+
 void SD_LowLevel_init() {
 	PC8::setFunction(AltFunction::AF_SDIO);
 	PC8::setPullMode(GPIOPuPd::GPIO_PuPd_UP);

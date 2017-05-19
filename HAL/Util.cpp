@@ -6,7 +6,7 @@
  */
 
 #include "../HAL/Util.h"
-
+#include "Semaphores.h"
 #include <xpcc/architecture.hpp>
 #include <unistd.h>
 #include <sys/time.h>
@@ -26,7 +26,12 @@ void XpccHAL::Util::set_system_clock(uint64_t time_utc_usec)  {
 	settimeofday(&tv, 0);
 }
 
+
 extern "C"
 int clock_gettime (clockid_t __clock_id, struct timespec *__tp) {
 	return 0;
+}
+
+AP_HAL::Semaphore* XpccHAL::Util::new_semaphore(void) {
+	return new Semaphore();
 }

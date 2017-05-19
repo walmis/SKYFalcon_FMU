@@ -47,6 +47,13 @@ void Radio::mainTask() {
 	while(1) {
 		dataEvent.wait(10);
 
+		if(radioReset) {
+			XPCC_LOG_DEBUG .printf("Si4432 RADIO Reset! Reinitializing\n");
+			logRadioError(3);
+			initRadioRegisters();
+			radioReset = false;
+		}
+
 		if(checkTimer.isExpired()) {
 			if(!checkRegistersValid()) {
 				XPCC_LOG_DEBUG .printf("Radio register check failed, reinit!\n");
@@ -342,7 +349,5 @@ void Radio::handleTxComplete() {
 }
 
 void Radio::handleReset() {
-	XPCC_LOG_DEBUG .printf("Si4432 RADIO Reset! Reinitializing\n");
-	logRadioError(3);
-	initRadioRegisters();
+	radioReset = true;
 }

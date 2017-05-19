@@ -4,13 +4,52 @@
 
 #include <xpcc/architecture.hpp>
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
+#include <ch.hpp>
 
 #include "../HAL/AP_HAL_XPCC.h"
+#include "Semaphores.h"
 #include <AP_HAL/HAL.h>
 #include <AP_HAL/I2CDevice.h>
 
+//class XpccHAL::I2CDevice;
+
+#define NUM_BUS_TIMERS 6
+
+class Timer {
+public:
+	Timer(XpccHAL::I2CDevice* parent, int id,
+			AP_HAL::Device::PeriodicCb callback) :
+			parent(parent), id(id), period(0), callback(callback) {
+		chVTObjectInit(&vt);
+		XPCC_LOG_DEBUG.printf("registering timer id:%d\n", id);
+	}
+
+	void set(int time) {
+		period = time;
+		chVTSet(&vt, period, tmrcb, this);
+	}
+
+	bool call() {
+		return callback();
+	}
+
+	void stop() {}
+
+private:
+	static void tmrcb(void* arg);
+
+	virtual_timer_t vt;
+	int period;
+	XpccHAL::I2CDevice* parent;
+	uint8_t id;
+	AP_HAL::Device::PeriodicCb callback;
+
+};
+
 class XpccHAL::I2CDevice : public AP_HAL::I2CDevice, xpcc::I2cWriteReadTransaction {
 public:
+	I2CDevice();
+	friend Timer;
 
 	/*
 	 * Change device address. Note that this is the 7 bit address, it
@@ -49,13 +88,18 @@ public:
 		Device::PeriodicHandle h, uint32_t period_usec) override;
 
 private:
-    static bool busRelease(bool force = false);
+	static void busThread(void*);
+
+    static bool bitbangBusRelease(bool force = false);
     static void busReset();
     bool startTransaction();
 
-    AP_HAL::Semaphore* _semaphore;
-    uint8_t error_count;
-    uint8_t retries;
+    static thread_t* bus_thread;
+    static Semaphore _semaphore;
+    uint8_t error_count = 0;
+    uint8_t retries = 0;
+    static Timer* timers[NUM_BUS_TIMERS];
+    static uint8_t registered_timers;
 };
 
 class XpccHAL::I2CDeviceManager : public AP_HAL::I2CDeviceManager{

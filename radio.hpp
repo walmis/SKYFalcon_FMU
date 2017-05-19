@@ -170,6 +170,7 @@ public:
 	uint8_t seq			= 0;
 
 	bool hwInitialized	= false;
+	volatile bool radioReset = false;
 
     bool transmitting() {
     	return mode() == RHModeTx;

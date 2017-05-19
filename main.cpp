@@ -29,13 +29,14 @@
 #include <../ArduCopter/APM_Config.h>
 #include <../ArduCopter/Copter.h>
 
+#define DEBUG 1
 
 #define xstr(s) str(s)
 #define str(s) #s
 
-#define VERSION "APM:Copter V3.4 Build: " __DATE__ " " __TIME__
+#define VERSION "APM:Copter V3.4.6 Build: " __DATE__ " " __TIME__
 
-#define USB_PRODUCT_STRING		"SKY.Falcon FMU (" VERSION " " xstr(FRAME_CONFIG) ")"
+#define USB_PRODUCT_STRING		"SKY.Falcon FMU:" SKYFALCON_GITVER " Ardupilot:" ARDUPILOT_GITVER " (" xstr(FRAME_CONFIG) ")"
 #define USB_MANUFACTURER_STRING	"ENSYS.LT"
 #define USB_SERIAL_STRING		"0001"
 
@@ -207,8 +208,17 @@ USBStorage usb_storage_task;
 extern void setup();
 extern void loop();
 
+void (*cause_hardfault)(void);
 
 void AP_HAL::init() {
+
+	//Catch NULL pointers
+	int region = 0;
+	MPU->RNR = region;
+	MPU->RBAR = 0;
+	MPU->RASR = MPU_RASR_ENABLE_Msk | ((20-1)<<MPU_RASR_SIZE_Pos) | MPU_RASR_SRD_Msk ;
+
+	MPU->CTRL |= MPU_CTRL_ENABLE_Msk | MPU_CTRL_PRIVDEFENA_Msk;
 
 }
 

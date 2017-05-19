@@ -41,7 +41,8 @@ void logRadioError(uint8_t error_code) {
         sub_system    : ERROR_SUBSYSTEM_RADIO,
         error_code    : error_code,
     };
-    dataflash->WriteBlock(&pkt, sizeof(pkt));
+    if(dataflash)
+    	dataflash->WriteBlock(&pkt, sizeof(pkt));
 }
 
 AP_Radio radio_cfg;

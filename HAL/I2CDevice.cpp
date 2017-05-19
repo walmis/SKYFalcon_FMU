@@ -3,6 +3,8 @@
 #include <xpcc/architecture.hpp>
 #include "../pindefs.hpp"
 #include "I2CDevice.h"
+#include <chvt.h>
+#include <ch.h>
 
 using namespace XpccHAL;
 
@@ -10,24 +12,12 @@ extern const AP_HAL::HAL& hal;
 
 #define I2C xpcc::stm32::I2cMaster1
 
-//
-//AP_HAL::Semaphore* I2CDriver::get_semaphore() {
-//	return _semaphore;
-//}
-//
-//void I2CDriver::begin() {
-//	//hal.scheduler->register_timer_process(AP_HAL_MEMBERPROC(&I2CDriver::watchdog));
-//	busRelease(true);
-//}
-//
-//void I2CDriver::end() {}
-//
-//void I2CDriver::setTimeout(uint16_t ms) {}
-//void I2CDriver::setHighSpeed(bool active) {}
-//
+Semaphore I2CDevice::_semaphore;
+thread_t* I2CDevice::bus_thread;
+Timer* I2CDevice::timers[NUM_BUS_TIMERS];
+uint8_t I2CDevice::registered_timers = 0;
 
-//extern const AP_HAL::HAL& hal;
-//
+
 void I2CDevice::busReset() {
 	I2C::busReset();
 }
@@ -62,7 +52,7 @@ static void i2readbit() {
     chibios_rt::BaseThread::sleep(US2ST(10));
 }
 //
-bool I2CDevice::busRelease(bool force) {
+bool I2CDevice::bitbangBusRelease(bool force) {
 	bool res = true;
 	if(!Sda::read() || force) { //sda is low
 		res = false;
@@ -105,40 +95,40 @@ retry:
 	if(!I2C::start(this)) {
 		//XPCC_LOG_DEBUG << "e1";
 		error_count++;
-		return 1;
+		return false;
 	}
 
 	if(!wait(3)) {
-		XPCC_LOG_DEBUG .printf("i2c Timeout (%d, %d)\n", getState(), this->errno);
+		XPCC_LOG_DEBUG .printf("i2c Timeout (%d, %d)\n", getState(), this->error);
 		XPCC_LOG_DEBUG .printf("I2c: CR1:%x CR2:%x SR1:%x SR2:%x\n", I2C1->CR1, I2C1->CR2, I2C1->SR1, I2C1->SR2);
 
 		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::resetTransaction(this));
 
 		busReset();
-		busRelease();
+		bitbangBusRelease();
 
 		error_count++;
 
 		if(retry_count) {
 			goto retry;
 		}
-		return 1;
+		return false;
 	}
 
 	bool failed = getState() != xpcc::I2cWriteReadTransaction::AdapterState::Idle;
 	if(failed)  {
 
 		//XPCC_LOG_DEBUG .printf("e3 %d\n", this->errno);
-		if(this->errno == xpcc::I2cMaster::Error::DataNack) {
+		if(this->error == xpcc::I2cMaster::Error::DataNack) {
 			if(retry_count) {
 				goto retry;
 			}
 		} else
 			error_count++;
 
-		if(this->errno == xpcc::I2cMaster::Error::BusCondition) {
+		if(this->error == xpcc::I2cMaster::Error::BusCondition) {
 			I2C::busReset();
-			busRelease();
+			bitbangBusRelease();
 
 			if(retry_count) {
 				goto retry;
@@ -147,8 +137,46 @@ retry:
 
 
 	}
-	return failed;
+	return !failed;
 }
+
+void I2CDevice::busThread(void* arg) {
+
+	XPCC_LOG_DEBUG .printf("Hello i2c thread\n");
+	while(1) {
+
+		eventmask_t ev = chEvtWaitOne(ALL_EVENTS);
+
+		uint8_t event_id = __builtin_ctzl(ev); //count trailing zeroes
+
+		//XPCC_LOG_DEBUG .printf("Event occurred %d\n", event_id);
+
+		Timer* t = timers[event_id];
+		if(t) {
+			if(!_semaphore.take(1000)) {
+				XPCC_LOG_DEBUG .printf("i2c sem timeout\n");
+			}
+
+			if(!t->call()) {
+				t->stop();
+				timers[event_id] = 0;
+				delete t;
+			}
+			_semaphore.give();
+		}
+
+		//XPCC_LOG_DEBUG .printf("ev %d\n", chEvtGetAndClearEvents(ALL_EVENTS));
+
+	}
+}
+
+I2CDevice::I2CDevice() {
+	static void* mem[128];
+	if(!bus_thread) {
+		bus_thread = chThdCreateStatic(mem, sizeof(mem), NORMALPRIO+1, &busThread, 0);
+	}
+}
+
 bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
 						  uint8_t *recv, uint32_t recv_len) {
 
@@ -170,17 +198,56 @@ bool XpccHAL::I2CDevice::set_speed(Device::Speed speed) {
 
 bool XpccHAL::I2CDevice::read_registers_multiple(uint8_t first_reg,
 		uint8_t* recv, uint32_t recv_len, uint8_t times) {
+
+	if(!recv_len) return false;
+
+	if(!initialize( &first_reg, 1, recv, recv_len*times)) {
+		error_count++;
+		return false;
+	}
+	return startTransaction();
 }
 
 AP_HAL::Semaphore* XpccHAL::I2CDevice::get_semaphore() {
+	return &_semaphore;
 }
+
+
+void Timer::tmrcb(void* arg) {
+	Timer* t = (Timer*)arg;
+
+	chSysLockFromISR();
+	chEvtSignalI(t->parent->bus_thread, (1<<t->id));
+	chVTSetI((virtual_timer_t*)&t->vt, t->period, tmrcb, t);
+	chSysUnlockFromISR();
+}
+
+
+
 
 AP_HAL::Device::PeriodicHandle XpccHAL::I2CDevice::register_periodic_callback(
 		uint32_t period_usec, Device::PeriodicCb functor) {
+
+	int id = 0;
+	for(Timer* t : timers) {
+		if(t == NULL) {
+			Timer* vt = new Timer(this, id, functor);
+			vt->set(US2ST(period_usec));
+			timers[id] = vt;
+			return (void*)id;
+		}
+
+		id++;
+	}
+
+	AP_HAL::panic("MAX i2c register_periodic_callbacks reached!");
+	return 0;
+
 }
 
 bool XpccHAL::I2CDevice::adjust_periodic_callback(Device::PeriodicHandle h,
 		uint32_t period_usec) {
+	XPCC_LOG_DEBUG .printf("adjust periodic callback\n");
 }
 //uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
 //{

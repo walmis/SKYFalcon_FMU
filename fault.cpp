@@ -39,8 +39,9 @@ void dump(uint32_t* msp, uint32_t* psp) {
 
 extern "C"
 void HardFault_HandlerC(unsigned long *hardfault_args){
-	LedRed::set();
 
+
+	LedRed::set();
   volatile unsigned long stacked_r0 ;
   volatile unsigned long stacked_r1 ;
   volatile unsigned long stacked_r2 ;
@@ -84,62 +85,18 @@ void HardFault_HandlerC(unsigned long *hardfault_args){
   _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
   // Bus Fault Address Register
   _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-//#ifdef DEBUG
-  //asm volatile("bkpt 0");
-//#else
+
+
+  //asm volatile("mov sp, r0");
+//#ifndef NDEBUG
+  asm volatile("bkpt 0");
+//#endif
   //NVIC_SystemReset();
 //#endif
 
   while(1);
 }
-extern "C"
-void FPU_handlerC(uint32_t* stk) {
-	  volatile unsigned long stacked_r0 ;
-	  volatile unsigned long stacked_r1 ;
-	  volatile unsigned long stacked_r2 ;
-	  volatile unsigned long stacked_r3 ;
-	  volatile unsigned long stacked_r12 ;
-	  volatile unsigned long stacked_lr ;
-	  volatile unsigned long stacked_pc ;
-	  volatile unsigned long stacked_psr ;
-	  volatile unsigned long _CFSR ;
-	  volatile unsigned long _HFSR ;
-	  volatile unsigned long _DFSR ;
-	  volatile unsigned long _AFSR ;
-	  volatile unsigned long _BFAR ;
-	  volatile unsigned long _MMAR ;
 
-	  stacked_r0 = ((unsigned long)stk[0]) ;
-	  stacked_r1 = ((unsigned long)stk[1]) ;
-	  stacked_r2 = ((unsigned long)stk[2]) ;
-	  stacked_r3 = ((unsigned long)stk[3]) ;
-	  stacked_r12 = ((unsigned long)stk[4]) ;
-	  stacked_lr = ((unsigned long)stk[5]) ;
-	  stacked_pc = ((unsigned long)stk[6]) ;
-	  stacked_psr = ((unsigned long)stk[7]) ;
-
-	  // Configurable Fault Status Register
-	  // Consists of MMSR, BFSR and UFSR
-	  _CFSR = (*((volatile unsigned long *)(0xE000ED28))) ;
-
-	  // Hard Fault Status Register
-	  _HFSR = (*((volatile unsigned long *)(0xE000ED2C))) ;
-
-	  // Debug Fault Status Register
-	  _DFSR = (*((volatile unsigned long *)(0xE000ED30))) ;
-
-	  // Auxiliary Fault Status Register
-	  _AFSR = (*((volatile unsigned long *)(0xE000ED3C))) ;
-
-	  // Read the Fault Address Registers. These may not contain valid values.
-	  // Check BFARVALID/MMARVALID to see if they are valid values
-	  // MemManage Fault Address Register
-	  _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
-	  // Bus Fault Address Register
-	  _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-
-	  asm volatile("bkpt 0");
-}
 
 extern "C"
 void FPU_IRQHandler() {
@@ -147,8 +104,18 @@ void FPU_IRQHandler() {
 	NVIC_ClearPendingIRQ(FPU_IRQn);
 	__set_FPSCR(0x80000000);
 }
-
-extern "C" __attribute((naked)) void HardFault_Handler(void)
+extern "C" __attribute((naked)) void HardFault_Handler(void) {
+	asm volatile
+	(
+			"tst lr, #4		\n"
+			"ite eq			\n"
+			"mrseq r0, msp	\n"
+			"mrsne r0, psp	\n"
+			"mov sp, r0		\n"
+			"bkpt #1		\n"
+	);
+}
+extern "C" __attribute((naked)) void HardFault_Handler0(void)
 {
 	  __asm volatile (
 	    " movs r0,#4       \n"
@@ -165,16 +132,15 @@ extern "C" __attribute((naked)) void HardFault_Handler(void)
 	   // " bkpt #0          \n"
 	  );
 }
-//extern "C" void UsageFault_Handler(void)
-//{
-//  asm volatile("MRS r0, MSP;"
-//		       "B Hard_Fault_Handler");
-//}
-//extern "C" void BusFault_Handler(void)
-//{
-//  asm volatile("MRS r0, MSP;"
-//		       "B Hard_Fault_Handler");
-//}
+extern "C" void UsageFault_Handler(void)
+{
+	asm volatile("bkpt 1");
+}
+extern "C" void BusFault_Handler(void)
+{
+	asm volatile("bkpt 1");
+	while(1);
+}
 
 uint32_t crashData[3] __attribute__((section(".noinit")));
 

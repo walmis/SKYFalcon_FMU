@@ -12,6 +12,7 @@ public:
     uint32_t available_memory(void);
 
     void set_system_clock(uint64_t time_utc_usec) override;
+    AP_HAL::Semaphore *new_semaphore(void) override;
 };
 
 #endif // __AP_HAL_EMPTY_UTIL_H__
