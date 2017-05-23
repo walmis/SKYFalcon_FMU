@@ -49,6 +49,7 @@ void panic(const char *errormsg, ...) {
 
 	hal.console->print("PANIC:");
     hal.console->println(errormsg);
+    //asm("bkpt #0");
 
     LedBlue::set();
     LedRed::set();

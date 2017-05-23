@@ -22,25 +22,27 @@ public:
 			parent(parent), id(id), period(0), callback(callback) {
 
 		chVTObjectInit(&vt);
-		XPCC_LOG_DEBUG.printf("registering timer id:%d\n", id);
 	}
 
-	void set(int time) {
-		period = time;
-		chVTSet(&vt, period, tmrcb, this);
-	}
+	void set(uint32_t usec);
 
 	bool call() {
+		if(!callback) return false;
+
 		return callback();
 	}
 
-	void stop() {}
+	uint32_t getPeriod() { return period; }
+	uint8_t getId() { return id; }
+
+	void start();
+	void stop();
 
 private:
 	static void tmrcb(void* arg);
 
 	virtual_timer_t vt;
-	int period;
+	uint32_t period;
 	XpccHAL::I2CDevice* parent;
 	uint8_t id;
 	AP_HAL::Device::PeriodicCb callback;
@@ -49,7 +51,9 @@ private:
 
 class XpccHAL::I2CDevice : public AP_HAL::I2CDevice, xpcc::I2cWriteReadTransaction {
 public:
-	I2CDevice();
+	I2CDevice(uint8_t address);
+	virtual ~I2CDevice();
+
 	friend Timer;
 
 	/*

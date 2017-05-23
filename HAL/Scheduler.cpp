@@ -20,8 +20,13 @@ Scheduler::Scheduler()
 
 void Scheduler::init()
 {
+
 	MpuInt::attachInterrupt([this]() {
-		mpu6k_evt.signal();
+		//mpu6k_evt.signal();
+		chibios_rt::System::lockFromIsr();
+		mpu_evt.broadcastFlagsI(MPU_EVENT_MASK);
+		chibios_rt::System::unlockFromIsr();
+
 	}, xpcc::IntEdge::RISING_EDGE);
 
 	Thread::start(HIGHPRIO-1);
@@ -70,18 +75,22 @@ void Scheduler::delay_microseconds_boost(uint16_t us) {
 	//chibios_rt::BaseThread::setPriority(NORMALPRIO);
 }
 
+chibios_rt::EvtSource* Scheduler::getSync() {
+	return &mpu_evt;
+}
 
 void Scheduler::main() {
 	chibios_rt::BaseThread::setName("HALTimer");
 
 	while(1) {
-		//uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
+		uint32_t nextDeadline = chibios_rt::System::getTimeX() + MS2ST(1);
+
 		IWDG->KR = 0xAAAA; //feed the watchdog
-		//xpcc::stm32::PB13::set();
+
 		_run_timer_procs(true);
-		//xpcc::stm32::PB13::reset();
-		//synchronize on MPU6050 1khz DRDY
-		mpu6k_evt.wait(1);
+
+		if(chibios_rt::System::getTimeX() < nextDeadline)
+			chThdSleepUntil(nextDeadline);
 	}
 }
 

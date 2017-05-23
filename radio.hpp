@@ -181,8 +181,8 @@ public:
     }
 
 private:
-    THD_WORKING_AREA(_irq_wa, 256);
-    THD_WORKING_AREA(_main_wa, 256);
+    THD_WORKING_AREA(_irq_wa, 512);
+    THD_WORKING_AREA(_main_wa, 512);
 
     uint8_t spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len);
     uint8_t spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len);

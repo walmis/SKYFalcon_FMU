@@ -7,9 +7,9 @@
 #define MAX_TIMER_PROCS 4
 
 class XpccHAL::Scheduler final : public AP_HAL::Scheduler,
-	chibios_rt::BaseStaticThread<512> {
+	chibios_rt::BaseStaticThread<768> {
 
-	typedef chibios_rt::BaseStaticThread<512> Thread;
+	typedef chibios_rt::BaseStaticThread<768> Thread;
 public:
     Scheduler();
     void     init();
@@ -39,8 +39,14 @@ public:
 
     void	 yield();
 
+    static constexpr eventmask_t MPU_EVENT_MASK = EVENT_MASK(31);
+
+    //return 1khz sync from MPU6000
+    chibios_rt::EvtSource* getSync();
+
 private:
-    xpcc::Event mpu6k_evt;
+    //xpcc::Event mpu6k_evt;
+    chibios_rt::EvtSource mpu_evt;
 
     //timer thread
     void main();

@@ -140,41 +140,72 @@ retry:
 	return !failed;
 }
 
+extern void dbgset(uint8_t);
+extern void dbgclr(uint8_t);
+
 void I2CDevice::busThread(void* arg) {
 
 	XPCC_LOG_DEBUG .printf("Hello i2c thread\n");
+	chibios_rt::EvtSource* mpu_ev = static_cast<XpccHAL::Scheduler*>(hal.scheduler)->getSync();
+
+	chibios_rt::EvtListener listener;
+	mpu_ev->registerMask(&listener, XpccHAL::Scheduler::MPU_EVENT_MASK);
+
 	while(1) {
+		volatile eventmask_t ev = chEvtWaitOne(XpccHAL::Scheduler::MPU_EVENT_MASK);
 
-		eventmask_t ev = chEvtWaitOne(ALL_EVENTS);
-
-		uint8_t event_id = __builtin_ctzl(ev); //count trailing zeroes
-
-		//XPCC_LOG_DEBUG .printf("Event occurred %d\n", event_id);
-
-		Timer* t = timers[event_id];
-		if(t) {
-			if(!_semaphore.take(1000)) {
-				XPCC_LOG_DEBUG .printf("i2c sem timeout\n");
+		for(int i = 0; i < NUM_BUS_TIMERS; i++) {
+			Timer* t = timers[i];
+			if(t && t->getPeriod() == 1000) {
+				chEvtSignal(bus_thread, EVENT_MASK(t->getId()));
 			}
-
-			if(!t->call()) {
-				t->stop();
-				timers[event_id] = 0;
-				delete t;
-			}
-			_semaphore.give();
 		}
 
-		//XPCC_LOG_DEBUG .printf("ev %d\n", chEvtGetAndClearEvents(ALL_EVENTS));
+		uint32_t timestart = chVTGetSystemTimeX();
+
+		while(1) {
+			ev = chEvtWaitOneTimeout(ALL_EVENTS & ~XpccHAL::Scheduler::MPU_EVENT_MASK, 100);
+			uint8_t event_id = __builtin_ctzl(ev); //count trailing zeroes
+
+			if(event_id > NUM_BUS_TIMERS) {
+				asm("nop");
+
+			} else {
+				Timer* tmr = timers[event_id];
+				if(tmr) {
+					if(!_semaphore.take(1000)) {
+						//XPCC_LOG_DEBUG .printf("i2c sem timeout\n");
+						continue;
+					}
+
+					if(!tmr->call()) {
+						tmr->stop();
+						timers[event_id] = 0;
+						delete tmr;
+					}
+					_semaphore.give();
+
+
+				}
+			}
+
+			if(chVTGetSystemTimeX() - timestart > 800) break;
+		}
 
 	}
 }
 
-I2CDevice::I2CDevice() {
-	static void* mem[128];
+I2CDevice::I2CDevice(uint8_t address) {
+	static void* mem[256];
 	if(!bus_thread) {
 		bus_thread = chThdCreateStatic(mem, sizeof(mem), NORMALPRIO+1, &busThread, 0);
 	}
+
+	set_address(address);
+}
+
+I2CDevice::~I2CDevice() {
+	asm volatile("nop");
 }
 
 bool I2CDevice::transfer(const uint8_t *send, uint32_t send_len,
@@ -218,13 +249,25 @@ void Timer::tmrcb(void* arg) {
 	Timer* t = (Timer*)arg;
 
 	chSysLockFromISR();
-	chEvtSignalI(t->parent->bus_thread, (1<<t->id));
+	chEvtSignalI(t->parent->bus_thread, EVENT_MASK(t->id));
 	chVTSetI((virtual_timer_t*)&t->vt, t->period, tmrcb, t);
 	chSysUnlockFromISR();
 }
 
+void Timer::set(uint32_t usec) {
+	static_assert(CH_CFG_ST_FREQUENCY == 1000000,
+	                  "CH_CFG_ST_FREQUENCY is not 1000000");
+	period = usec;
 
+}
 
+void Timer::start() {
+	chVTSet(&vt, period, tmrcb, this);
+}
+
+void Timer::stop() {
+	chVTReset(&vt);
+}
 
 AP_HAL::Device::PeriodicHandle XpccHAL::I2CDevice::register_periodic_callback(
 		uint32_t period_usec, Device::PeriodicCb functor) {
@@ -232,9 +275,17 @@ AP_HAL::Device::PeriodicHandle XpccHAL::I2CDevice::register_periodic_callback(
 	int id = 0;
 	for(Timer* t : timers) {
 		if(t == NULL) {
-			Timer* vt = new Timer(this, id, functor);
-			vt->set(US2ST(period_usec));
-			timers[id] = vt;
+			Timer* tmr = new Timer(this, id, functor);
+
+			//1ms is special case, since it is synchronized to MPU DRDY
+			//else use virtual timers
+			tmr->set(period_usec);
+
+			if(period_usec != 1000) {
+				tmr->start();
+			}
+
+			timers[id] = tmr;
 			return (void*)id;
 		}
 
@@ -255,79 +306,12 @@ AP_HAL::OwnPtr<AP_HAL::I2CDevice> XpccHAL::I2CDeviceManager::get_device(
 		uint8_t bus, uint8_t address)
 {
 	if(bus == 0) {
-		auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new XpccHAL::I2CDevice);
-		dev->set_address(address);
+		auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new XpccHAL::I2CDevice(address));
+		hal.console->printf("new device %x %x\n", address, dev.get());
 		return dev;
+	} else {
+		AP_HAL::panic("Unknown i2c specified");
 	}
 	return nullptr;
 }
-//uint8_t I2CDriver::write(uint8_t addr, uint8_t len, uint8_t* data)
-//{
-//	if(!initialize(addr, data, len, 0, 0)) {
-//		error_count++;
-//		return 1;
-//	}
-//
-//	return startTransaction();
-//}
-//uint8_t I2CDriver::writeRegister(uint8_t addr, uint8_t reg, uint8_t val)
-//{
-//	uint8_t data[2];
-//	data[0] = reg;
-//	data[1] = val;
-//	if(!initialize(addr, data, sizeof(data), 0, 0)) {
-//		error_count++;
-//		return 1;
-//	}
-//	return startTransaction();
-//}
-//uint8_t I2CDriver::writeRegisters(uint8_t addr, uint8_t reg,
-//                               uint8_t len, uint8_t* data)
-//{
-//	uint8_t buf[len + 1];
-//	buf[0] = reg;
-//	memcpy(&buf[1], data, len);
-//
-//	if(!initialize(addr, buf, len+1, 0, 0)) {
-//		error_count++;
-//		return 1;
-//	}
-//	return startTransaction();
-//}
-//
-//uint8_t I2CDriver::read(uint8_t addr, uint8_t len, uint8_t* data)
-//{
-//	if(!initialize(addr, 0, 0, data, len)) {
-//		error_count++;
-//		return 1;
-//	}
-//	return startTransaction();
-//}
-//
-//uint8_t I2CDriver::readRegister(uint8_t addr, uint8_t reg, uint8_t* data)
-//{
-//	if(!initialize(addr, &reg, 1, data, 1)) {
-//		error_count++;
-//		return 1;
-//	}
-//	return startTransaction();
-//}
-//
-//uint8_t I2CDriver::readRegisters(uint8_t addr, uint8_t reg,
-//                                      uint8_t len, uint8_t* data)
-//{
-//	if(!len) return 1;
-//
-//	//I2cWriteReadTransaction transaction;
-//
-//	if(!initialize(addr, &reg, 1, data, len)) {
-//		error_count++;
-//		return 1;
-//	}
-//	return startTransaction();
-//}
-//
-//uint8_t I2CDriver::lockup_count() {
-//	return error_count;
-//}
 

@@ -168,16 +168,21 @@ void _delay_ms(uint32_t ms) {
 
 
 
-
+void dbginit() {
+	PB13::setOutput(0);
+	PB12::setOutput(0);
+}
 void dbgset(uint8_t i) {
-	PB15::set();
+	if(i == 0) PB12::set();
+	else if(i == 1) PB13::set();
 }
 
 void dbgclr(uint8_t i) {
-	PB15::reset();
+	if(i == 0) PB12::reset();
+	else if(i == 1) PB13::reset();
 }
 void dbgtgl(uint8_t i) {
-	PB15::toggle();
+	PB12::toggle();
 }
 
 //#define DEBUG
@@ -208,10 +213,9 @@ USBStorage usb_storage_task;
 extern void setup();
 extern void loop();
 
-void (*cause_hardfault)(void);
-
-void AP_HAL::init() {
-
+//extern AP_HAL::HAL::Callbacks copter;
+void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
+	dbginit();
 	//Catch NULL pointers
 	int region = 0;
 	MPU->RNR = region;
@@ -219,11 +223,7 @@ void AP_HAL::init() {
 	MPU->RASR = MPU_RASR_ENABLE_Msk | ((20-1)<<MPU_RASR_SIZE_Pos) | MPU_RASR_SRD_Msk ;
 
 	MPU->CTRL |= MPU_CTRL_ENABLE_Msk | MPU_CTRL_PRIVDEFENA_Msk;
-
-}
-
-//extern AP_HAL::HAL::Callbacks copter;
-void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
+	////
 
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);
@@ -266,16 +266,6 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 	NVIC_SetPriority(USART6_IRQn, 4);
 
 	I2cMaster1::setIrqPriority(5);
-
-	I2cReadTransaction test;
-	unsigned char c;
-	test.initialize(0x77, &c, 1);
-
-	I2cMaster1::start(&test);
-	test.wait();
-
-	XPCC_LOG_DEBUG .printf("test %d %d\n", test.getState(), test.error);
-
 
 	NVIC_SetPriority(OTG_FS_IRQn, 8);
 	NVIC_SetPriority(SDIO_IRQn, 8);
