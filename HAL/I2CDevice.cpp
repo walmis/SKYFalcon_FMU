@@ -307,7 +307,6 @@ AP_HAL::OwnPtr<AP_HAL::I2CDevice> XpccHAL::I2CDeviceManager::get_device(
 {
 	if(bus == 0) {
 		auto dev = AP_HAL::OwnPtr<AP_HAL::I2CDevice>(new XpccHAL::I2CDevice(address));
-		hal.console->printf("new device %x %x\n", address, dev.get());
 		return dev;
 	} else {
 		AP_HAL::panic("Unknown i2c specified");

@@ -47,7 +47,8 @@ HAL_XPCC::HAL_XPCC() :
 {}
 
 void AP_HAL::init() {
-	schedulerInstance.init();
+
+
 }
 
 namespace AP_HAL {

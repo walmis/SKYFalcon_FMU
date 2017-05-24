@@ -238,14 +238,14 @@ bool DataFlash_Xpcc::NeedErase(void){
 	return false;
 }
 
-void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
+bool DataFlash_Xpcc::WritePrioritisedBlock(const void* pBuffer, uint16_t size, bool is_critical) {
 //	if(!storage_lock && !hal.gpio->usb_connected()) {
 //		storage_lock = true;
 //	}
 
 
 	if(!file || !_writes_enabled || !storage_lock)
-		return;
+		return false;
 
 	static uint32_t count;
 	static uint32_t dropped = 0;
@@ -269,7 +269,7 @@ void DataFlash_Xpcc::WriteBlock(const void* pBuffer, uint16_t size) {
 	if(file && file->isOpened() && hal.gpio->usb_connected()) {
 		XPCC_LOG_DEBUG .printf("usb detected, stop log write\n");
 		stop_logging();
-		return;
+		return false;
 	}
 
 	writeLock.lock();
@@ -432,10 +432,26 @@ DataFlash_Xpcc* dataflash = 0;
 
 //exported function
 DataFlash_Backend* SKYFalcon_getDataflash(DataFlash_Class &front,
-		class DFMessageWriter_DFLogStart *writer) {
+		class DFMessageWriter_DFLogStart *writer, const char* directory) {
 	if(!dataflash) {
-		dataflash = new DataFlash_Xpcc(front, writer);
+		dataflash = new DataFlash_Xpcc(front, writer, directory);
 	}
 	return dataflash;
 }
 
+bool DataFlash_Xpcc::NeedPrep() {
+	return false;
+}
+
+void DataFlash_Xpcc::Prep() {
+}
+
+uint16_t DataFlash_Xpcc::bufferspace_available() {
+	return writer.bytesAvailable();
+}
+
+bool DataFlash_Xpcc::logging_enabled() const {
+}
+
+bool DataFlash_Xpcc::logging_failed() const {
+}

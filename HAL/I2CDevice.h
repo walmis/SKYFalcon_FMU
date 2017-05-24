@@ -92,10 +92,12 @@ public:
 	bool adjust_periodic_callback(
 		Device::PeriodicHandle h, uint32_t period_usec) override;
 
+	static bool bitbangBusRelease(bool force = false);
+
 private:
 	static void busThread(void*);
 
-    static bool bitbangBusRelease(bool force = false);
+
     static void busReset();
     bool startTransaction();
 

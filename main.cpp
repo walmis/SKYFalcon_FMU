@@ -192,7 +192,7 @@ void dbgtgl(uint8_t i) {
 class USBStorage : chibios_rt::BaseStaticThread<512> {
 public:
 	USBStorage() {
-		msd_handler.set_device_strings("SkyVideo", "SKY.Falcon", "1.0");
+		msd_handler.set_device_strings("ENSYS", "SKY.Falcon", "1.0");
 
 		this->start(NORMALPRIO);
 	}
@@ -251,8 +251,7 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 //	PB15::setOutputType(GPIOOType::GPIO_OType_OPENDRAIN);
 //	PB15::setPullMode(GPIOPuPd::GPIO_PuPd_UP);
 //	PB15::setSpeed(GPIOSpeed::GPIO_Speed_100MHz);
-	PB15::setOutput(0);
-	PB13::setOutput(0);
+	//PB15::setOutput(0);
 
 	XPCC_LOG_DEBUG << "\n\n --- Init Board ---\n\n";
 	XPCC_LOG_DEBUG .printf("fAPB1 %d\n", Clocks::getPCLK1Frequency());
@@ -274,7 +273,13 @@ void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 
 	usb.connect();
 
+	XpccHAL::I2CDevice::bitbangBusRelease();
+
 	//hal.init(0,0);
+
+	hal.scheduler->init();
+	hal.storage->init();
+	hal.analogin->init();
 
 	callbacks->setup();
 
