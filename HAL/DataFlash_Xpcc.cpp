@@ -248,17 +248,16 @@ bool DataFlash_Xpcc::WritePrioritisedBlock(const void* pBuffer, uint16_t size, b
 		return false;
 
 	static uint32_t count;
-	static uint32_t dropped = 0;
 	count += size;
 //#ifdef DEBUG
 	static xpcc::PeriodicTimer<> t(1000);
 	if(t.isExpired()) {
 		XPCC_LOG_DEBUG .printf("log wr %d b/s (buf avail %d, dropped %d)\n", count,
-				writer.bytesAvailable(), dropped);
+				writer.bytesAvailable(), _dropped);
 		count = 0;
 
 	}
-//#endif
+//#endifu
 
 	if(blockingTimeout.isActive() && blockingTimeout.isExpired()) {
 		blockingWrites = false;
@@ -283,7 +282,7 @@ bool DataFlash_Xpcc::WritePrioritisedBlock(const void* pBuffer, uint16_t size, b
 	writeLock.unlock();
 
 	if(!res) {
-		dropped += size;
+		_dropped += size;
 	}
 
 }
@@ -451,7 +450,9 @@ uint16_t DataFlash_Xpcc::bufferspace_available() {
 }
 
 bool DataFlash_Xpcc::logging_enabled() const {
+	return true;
 }
 
 bool DataFlash_Xpcc::logging_failed() const {
+	return false;
 }

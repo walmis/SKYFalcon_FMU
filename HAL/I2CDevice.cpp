@@ -152,7 +152,7 @@ void I2CDevice::busThread(void* arg) {
 	mpu_ev->registerMask(&listener, XpccHAL::Scheduler::MPU_EVENT_MASK);
 
 	while(1) {
-		volatile eventmask_t ev = chEvtWaitOne(XpccHAL::Scheduler::MPU_EVENT_MASK);
+		volatile eventmask_t ev = chEvtWaitOneTimeout(XpccHAL::Scheduler::MPU_EVENT_MASK, MS2ST(1));
 
 		for(int i = 0; i < NUM_BUS_TIMERS; i++) {
 			Timer* t = timers[i];

@@ -69,6 +69,10 @@
 
 #include <ch.hpp>
 
+extern const AP_HAL::HAL& hal;
+
+Radio radio;
+
 BufferedUart<stm32::Usart2> uart2(57600, 256, 128);
 BufferedUart<stm32::Usart1> uart1(230400, 256, 128);
 BufferedUart<stm32::Usart6> uartGps(57600, 64, 256);
@@ -92,18 +96,11 @@ class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
 			return USBMSD_VolumeHandler::disk_status();
 		}
 	}
-};
+} msd_handler(&sdCard, 2048);
 
-USBMSD_HandlerWrapper msd_handler(&sdCard, 2048);
 USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
 DFU dfu;
 
-#ifdef DEBUG
-IOStream stream(uart1);
-#endif
-
-//const AP_HAL::HAL& hal = AP_HAL::get_HAL();
-extern const AP_HAL::HAL& hal;
 
 void delay(uint32_t ms)
 {
@@ -138,7 +135,6 @@ XpccHAL::UARTDriver uartDDriver(&uart2);
 XpccHAL::UARTDriver uartEDriver(&radio);
 XpccHAL::UARTDriver uartConsoleDriver(&uart1);
 
-Radio radio;
 
 void XpccHAL::UARTDriver::setBaud(uint32_t baud, xpcc::IODevice* device) {
 	if(device == &uartGps) {
@@ -206,12 +202,8 @@ protected:
 			msd_handler.run();
 		}
 	}
-};
+} usb_storage_task;
 
-USBStorage usb_storage_task;
-
-extern void setup();
-extern void loop();
 
 //extern AP_HAL::HAL::Callbacks copter;
 void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
