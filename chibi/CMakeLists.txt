@@ -13,6 +13,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_sources(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/glue/chbAlarm.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/glue/malloc.c
+	${CMAKE_CURRENT_SOURCE_DIR}/glue/fatfs.c
 
   ${CMAKE_CURRENT_SOURCE_DIR}/cpp/ch.cpp
 
@@ -45,6 +46,8 @@ target_sources(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/rt/src/chtm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/rt/src/chtrace.c
     ${CMAKE_CURRENT_SOURCE_DIR}/rt/src/chvt.c
+    
+    ${CMAKE_CURRENT_SOURCE_DIR}/startup/crt0_v7m.S
 )
 
 # ADD_LIBRARY(chibi STATIC
