@@ -12,6 +12,7 @@
 #include "pindefs.hpp"
 #include <RH_RF22.h>
 #include "AP_Radio.hpp"
+#include <ch.h>
 
 using namespace xpcc::stm32;
 

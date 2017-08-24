@@ -9,6 +9,7 @@
 #include <xpcc/architecture.hpp>
 #include "../pindefs.hpp"
 #include "../dfu.hpp"
+#include <ch.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -20,7 +21,7 @@ uint32_t millis() {
 }
 
 uint32_t micros() {
-    return chibios_rt::System::getTimeX();
+    return chVTGetSystemTimeX();
 }
 
 uint64_t millis64() {
@@ -31,7 +32,7 @@ uint64_t micros64() {
 	__disable_irq();
 	static uint32_t last_time;
 	static uint32_t thigh = 0;
-	uint32_t time = chibios_rt::System::getTimeX();
+	uint32_t time = chVTGetSystemTimeX();
 	//handle timer overflow
 	if(time < last_time) {
 		thigh++;
@@ -64,5 +65,3 @@ void panic(const char *errormsg, ...) {
 }
 
 }
-
-

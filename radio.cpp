@@ -22,7 +22,8 @@ void Radio::_main_entry(void *ths) {
 }
 
 void Radio::irqTask() {
-	chibios_rt::BaseThread::setName("RadioIRQ");
+    chRegSetThreadName("RadioIRQ");
+    
 	while(1) {
 		irqEvent.wait(10);
 		if(!RadioIrq::read()) {
@@ -40,8 +41,7 @@ void Radio::irqTask() {
 }
 
 void Radio::mainTask() {
-	chibios_rt::BaseThread::setName("Radio");
-
+    chRegSetThreadName("Radio");
 	static xpcc::PeriodicTimer<> checkTimer(100);
 
 	while(1) {

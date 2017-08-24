@@ -47,7 +47,6 @@ add_custom_target(
 
 set(SOURCES
 	./radio.cpp
-	./ChibiOS/chbAlarm.cpp
 	./lowlevel.cpp
 	./HAL/system.cpp
 	./HAL/UARTDriver.cpp
@@ -71,7 +70,6 @@ set(SOURCES
 	./main.cpp
 	./dfu.cpp
 	./AP_Radio.cpp
-	./ChibiOS/malloc.c
 	./stm32/startup.c
 	./stm32/system_stm32f4xx.c
 	#./stm32/stm32f4xx_flash.c
@@ -96,6 +94,8 @@ project(${PROJECT_NAME} CXX C)
 
 set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-I")
 set(CMAKE_INCLUDE_SYSTEM_FLAG_C "-I")
+
+add_subdirectory(chibi)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-math-errno -Wno-non-virtual-dtor")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-math-errno")

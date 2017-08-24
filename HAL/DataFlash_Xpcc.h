@@ -1,6 +1,6 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-/* 
+/*
    DataFlash logging - file oriented variant
 
    This uses posix file IO to create log files called logNN.dat in the
@@ -12,6 +12,7 @@
 #include <DataFlash/DataFlash_Backend.h>
 #include <xpcc/processing.hpp>
 #include <xpcc/driver/storage/fat.hpp>
+#include <ch.hpp>
 
 class DataWriterThread : public chibios_rt::BaseStaticThread<512> {
 public:
@@ -108,5 +109,3 @@ protected:
 };
 
 extern DataFlash_Xpcc* dataflash;
-
-

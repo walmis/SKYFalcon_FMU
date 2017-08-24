@@ -4,6 +4,7 @@
 #include <RHGenericSPI.h>
 #include <stdarg.h>
 #include "pindefs.hpp"
+#include <ch.hpp>
 
 using namespace xpcc::stm32;
 

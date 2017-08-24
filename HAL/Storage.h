@@ -5,7 +5,7 @@
 #include <xpcc/debug.hpp>
 #include <xpcc/processing.hpp>
 #include "../HAL/AP_HAL_XPCC.h"
-
+#include <ch.hpp>
 
 
 class XpccHAL::Storage final : public AP_HAL::Storage, chibios_rt::BaseStaticThread<256> {
@@ -19,6 +19,8 @@ public:
 
     chibios_rt::Mutex eeprom_lock;
     xpcc::Event dataEvt;
+
+    THD_WORKING_AREA(_main_wa, 256);
 };
 
 #endif // __AP_HAL_EMPTY_STORAGE_H__

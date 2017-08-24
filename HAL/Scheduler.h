@@ -3,6 +3,7 @@
 #define __AP_HAL_EMPTY_SCHEDULER_H__
 
 #include "../HAL/AP_HAL_XPCC.h"
+#include <ch.hpp>
 
 #define MAX_TIMER_PROCS 4
 
