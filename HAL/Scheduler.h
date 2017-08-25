@@ -48,6 +48,7 @@ public:
 private:
     //xpcc::Event mpu6k_evt;
     chibios_rt::EvtSource mpu_evt;
+    xpcc::OwnPtr<xpcc::GpioInt> mpuIntHandle;
 
     //timer thread
     void main();
