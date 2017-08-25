@@ -6,13 +6,13 @@ SET(PLATFORM "stm32f4")
 SET(PROJECT_NAME "SKYFalcon_FMU")
 #SET(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/stm32/linkscript.ld")
 SET(XPCC_CMAKE_DEFINES "-DCHIBI_RTOS=1")
-SET(LIBRARIES "${CMAKE_SOURCE_DIR}/ardupilot/build/libArduCopter.a") #additional libraries
+SET(LIBRARIES "${CMAKE_BINARY_DIR}/ardupilot/build/libArduCopter.a") #additional libraries
 
 if(NOT DEFINED ${FRAME})
 SET(FRAME quad)
 endif()
 
-SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon-${FRAME} BUILDROOT=${CMAKE_SOURCE_DIR}/ardupilot/build)
+SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon-${FRAME} BUILDROOT=${CMAKE_BINARY_DIR}/ardupilot/build)
 
 ExternalProject_Add(ardupilot
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/../ardupilot
@@ -30,7 +30,7 @@ add_definitions(
 include_directories(
 ../ardupilot/ArduCopter
 ../ardupilot/libraries
-./ardupilot/build/libraries/GCS_MAVLink/
+${CMAKE_BINARY_DIR}/ardupilot/build/libraries/GCS_MAVLink/
 )
 
 add_custom_target(
