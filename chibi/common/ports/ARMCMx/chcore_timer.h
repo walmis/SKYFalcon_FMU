@@ -28,8 +28,12 @@
 #ifndef CHCORE_TIMER_H
 #define CHCORE_TIMER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* This is the only header in the HAL designed to be include-able alone.*/
-#include "hal_st.h"
+//#include "hal_st.h"
 
 /*===========================================================================*/
 /* Module constants.                                                         */
@@ -68,20 +72,14 @@
  *
  * @notapi
  */
-static inline void port_timer_start_alarm(systime_t time) {
-
-  stStartAlarm(time);
-}
+void port_timer_start_alarm(systime_t time);
 
 /**
  * @brief   Stops the alarm interrupt.
  *
  * @notapi
  */
-static inline void port_timer_stop_alarm(void) {
-
-  stStopAlarm();
-}
+void port_timer_stop_alarm(void);
 
 /**
  * @brief   Sets the alarm time.
@@ -90,10 +88,7 @@ static inline void port_timer_stop_alarm(void) {
  *
  * @notapi
  */
-static inline void port_timer_set_alarm(systime_t time) {
-
-  stSetAlarm(time);
-}
+void port_timer_set_alarm(systime_t time);
 
 /**
  * @brief   Returns the system time.
@@ -102,10 +97,7 @@ static inline void port_timer_set_alarm(systime_t time) {
  *
  * @notapi
  */
-static inline systime_t port_timer_get_time(void) {
-
-  return stGetCounter();
-}
+systime_t port_timer_get_time(void);
 
 /**
  * @brief   Returns the current alarm time.
@@ -114,10 +106,11 @@ static inline systime_t port_timer_get_time(void) {
  *
  * @notapi
  */
-static inline systime_t port_timer_get_alarm(void) {
+systime_t port_timer_get_alarm(void);
 
-  return stGetAlarm();
+#ifdef __cplusplus
 }
+#endif
 
 #endif /* CHCORE_TIMER_H */
 
