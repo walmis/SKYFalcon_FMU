@@ -1,7 +1,6 @@
 /Release/
 /CMakeFiles
 CMakeCache.txt
-xpcc
 cmake_install.cmake
 Makefile
 .cproject
@@ -17,3 +16,4 @@ SOURCE_DIR-prefix/
 ardupilot/
 build
 xpcc.build
+/xpcc
