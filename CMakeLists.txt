@@ -114,4 +114,5 @@ add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD
                         COMMENT "Generating DFU Image"
                         VERBATIM)
                         
-add_dependencies(xpcc ardupilot ardupilot_make)
+add_dependencies(ardupilot_make ardupilot)
+add_dependencies(${PROJECT_NAME} ardupilot ardupilot_make)
