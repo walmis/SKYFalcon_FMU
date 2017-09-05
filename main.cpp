@@ -21,35 +21,12 @@
 #include "HAL/Storage.h"
 #include <xpcc/architecture.hpp>
 #include <xpcc/processing.hpp>
-
+#include <xpcc/driver/connectivity/usb/USBDevice.hpp>
 #include <xpcc/debug.hpp>
 #include <math.h>
 #include "lowlevel.hpp"
-
 #include <../ArduCopter/APM_Config.h>
 #include <../ArduCopter/Copter.h>
-
-#define DEBUG 1
-
-#define xstr(s) str(s)
-#define str(s) #s
-
-#define VERSION "APM:Copter V3.4.6 Build: " __DATE__ " " __TIME__
-
-#define USB_PRODUCT_STRING		"SKY.Falcon FMU:" SKYFALCON_GITVER " Ardupilot:" ARDUPILOT_GITVER " (" xstr(FRAME_CONFIG) ")"
-#define USB_MANUFACTURER_STRING	"ENSYS.LT"
-#define USB_SERIAL_STRING		"0001"
-
-#define CDC_EPBULK_IN	EP2IN
-#define CDC_EPBULK_OUT	EP2OUT
-#define CDC_EPINT_IN	EP3IN
-
-#define MSD_EPBULK_IN	EP1IN
-#define MSD_EPBULK_OUT	EP1OUT
-
-#include <xpcc/driver/connectivity/usb/USBDevice/Composite/USBCDCMSD.hpp>
-#include <xpcc/driver/connectivity/usb/USBDevice/USBSerial/USBSerial.h>
-#include <xpcc/driver/connectivity/usb/USBDevice/USBMSD/USBMSD.h>
 
 #include <xpcc/architecture/peripheral/i2c_adapter.hpp>
 #include <xpcc/driver/storage/sd/SDCardVolume.hpp>
@@ -68,6 +45,14 @@
 #include "radio.hpp"
 
 #include <ch.hpp>
+
+#define DEBUG 1
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+USB_PRODUCT_STRING("SKY.Falcon FMU:" SKYFALCON_GITVER " Ardupilot:" ARDUPILOT_GITVER " (" xstr(FRAME_CONFIG) ")");
+USB_MANUFACTURER_STRING("Ensys.lt");
 
 extern const AP_HAL::HAL& hal;
 
@@ -98,7 +83,8 @@ class USBMSD_HandlerWrapper final : public USBMSD_VolumeHandler {
 	}
 } msd_handler(&sdCard, 2048);
 
-USBCDCMSD usb(&msd_handler, 0xffff, 0x32fc, 0);
+
+USBCDCMSD usb(&msd_handler);
 DFU dfu;
 
 

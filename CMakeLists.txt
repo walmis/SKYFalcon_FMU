@@ -8,6 +8,9 @@ SET(PROJECT_NAME "SKYFalcon_FMU")
 SET(XPCC_CMAKE_DEFINES "-DCHIBI_RTOS=1")
 SET(LIBRARIES "${CMAKE_BINARY_DIR}/ardupilot/build/libArduCopter.a") #additional libraries
 
+set(USB_PRODUCT_ID 0x32fc)
+set(USB_VENDOR_ID 0xffff)
+
 if(NOT DEFINED ${FRAME})
 SET(FRAME quad)
 endif()
@@ -47,6 +50,7 @@ add_custom_target(
 
 set(SOURCES
 	./radio.cpp
+	./radio_lowlevel.cpp
 	./lowlevel.cpp
 	./HAL/system.cpp
 	./HAL/UARTDriver.cpp

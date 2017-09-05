@@ -196,7 +196,7 @@ void I2CDevice::busThread(void* arg) {
 }
 
 I2CDevice::I2CDevice(uint8_t address) {
-	static void* mem[256];
+	static stkalign_t mem[128];
 	if(!bus_thread) {
 		bus_thread = chThdCreateStatic(mem, sizeof(mem), NORMALPRIO+1, &busThread, 0);
 	}

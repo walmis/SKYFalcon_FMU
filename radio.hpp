@@ -16,27 +16,32 @@
 
 using namespace xpcc::stm32;
 
-enum PacketType {
-	PACKET_RC = 100,
-	PACKET_RF_PARAM_SET,
-	PACKET_DATA_FIRST, //first data fragment
-	PACKET_DATA, //data fragment
-	PACKET_DATA_LAST, //last data fragment
-	PACKET_ACK
+#define EVENT_IRQ (1)
+
+enum class PacketFlags {
+	FLAG_TELEM_PENDING = 1<<0,
+	PACKET_RC = 1<<1,
+	PACKET_RC_ACK = 1<<2,
+	PACKET_TELEMETRY = 1<<3,
+	PACKET_TELEMETRY_ACK = 1<<4,
 };
 
+enum class EventFlags {
+	EVENT_RX_START = 1<<0,
+	EVENT_RX_COMPLETE = 1<<1,
+	EVENT_TX_COMPLETE = 1<<2,
+	EVENT_RADIO_RESET = 1<<8
+};
+
+ENUM_CLASS_FLAG(PacketFlags);
+ENUM_CLASS_FLAG(EventFlags);
+
 struct Packet {
-	uint8_t id = PACKET_RC;
-	uint8_t seq; //sequence number
-	uint8_t ackSeq; //rx acknowledged seq number
 	int8_t rssi; // local rssi dBm
 	int8_t noise; //local noise dBm
 } __attribute__((packed));
 
 struct RadioCfgPacket : Packet {
-	RadioCfgPacket() {
-		id = PACKET_RF_PARAM_SET;
-	}
 	uint32_t frequency;
 	uint32_t afcPullIn;
 	uint8_t modemCfg;
@@ -184,9 +189,12 @@ public:
 private:
     THD_WORKING_AREA(_irq_wa, 512);
     THD_WORKING_AREA(_main_wa, 512);
+    thread_t* thread_irq;
+    thread_t* thread_main;
 
     uint8_t spiBurstWrite(uint8_t reg, const uint8_t* src, uint8_t len);
     uint8_t spiBurstRead(uint8_t reg, uint8_t* dest, uint8_t len);
+    void initDMA();
 
     dma::DMAStream dmarx{dma::Stream::DMA2_2};
     dma::DMAStream dmatx{dma::Stream::DMA2_5};
