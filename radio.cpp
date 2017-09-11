@@ -264,7 +264,9 @@ void Radio::handleRxComplete() {
 }
 
 void Radio::handleInterrupt() {
+	chSysLockFromISR();
 	chEvtSignalI(thread_irq, EVENT_IRQ);
+	chSysUnlockFromISR();
 }
 
 void Radio::handleTxComplete() {
