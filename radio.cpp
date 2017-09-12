@@ -60,24 +60,26 @@ void Radio::mainTask() {
 		if(events & EventFlags::EVENT_RX_COMPLETE) {
 			if(rxDataLen) {
 
-
 				if(headerFlags() & PacketFlags::PACKET_RC) {
 					RCPacket* pkt = (RCPacket*) rxBuf;
-					printf("got rc packet %d\n", headerId());
+					printf("rc %d\n", headerId());
 				}
 
-
 				rxDataLen = 0;
+
+				sendRcAck();
 			}
+
+			setModeRx();
 		}
 
-		if(checkTimer.isExpired()) {
-			if(!checkRegistersValid()) {
-				XPCC_LOG_DEBUG .printf("Radio register check failed, reinit!\n");
-				logRadioError(4);
-				initRadioRegisters();
-			}
-		}
+//		if(checkTimer.isExpired()) {
+//			if(!checkRegistersValid()) {
+//				XPCC_LOG_DEBUG .printf("Radio register check failed, reinit!\n");
+//				logRadioError(4);
+//				initRadioRegisters();
+//			}
+//		}
 
 //		if (!transmitting()) {
 //			//make sure we are in RX mode always if not transmitting anything
@@ -172,8 +174,8 @@ bool Radio::init() {
 	}
 	hwInitialized = true;
 
-	thread_irq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+3, _irq_entry, this);
-	thread_main = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO, _main_entry, this);
+	thread_irq = chThdCreateStatic(_irq_wa, sizeof(_irq_wa), NORMALPRIO+5, _irq_entry, this);
+	thread_main = chThdCreateStatic(_main_wa, sizeof(_main_wa), NORMALPRIO+4, _main_entry, this);
 
 	return true;
 }
@@ -197,6 +199,31 @@ bool Radio::initRadioRegisters() {
 
 	setModeRx();
 	XPCC_LOG_DEBUG .printf("Radio initialized (f:%d)\n", radio_cfg.frequency.get());
+}
+
+bool Radio::sendRcAck() {
+	Packet pkt;
+	pkt.rssi = getRssi();
+	pkt.noise = getNoiseFloor();
+
+	uint8_t seq = headerId();
+	setHeaderFlags((int)PacketFlags::PACKET_RC_ACK);
+	setHeaderId(seq);
+
+	send((uint8_t*)&pkt, sizeof(Packet));
+	return waitPacketSent();
+}
+
+bool Radio::waitPacketSent() {
+	if(_mode == RHModeTx) {
+		eventmask_t ev = chEvtWaitAnyTimeout((eventmask_t)EventFlags::EVENT_TX_COMPLETE, MS2ST(1000));
+		if(!ev) {
+			XPCC_LOG_DEBUG .printf("TX timeout!\n");
+		}
+		return ev & EventFlags::EVENT_TX_COMPLETE;
+	} else {
+		return true;
+	}
 }
 
 bool Radio::sendAck(Packet* inPkt) {

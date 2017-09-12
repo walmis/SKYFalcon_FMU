@@ -30,7 +30,7 @@ enum class EventFlags {
 	EVENT_RX_START = 1<<0,
 	EVENT_RX_COMPLETE = 1<<1,
 	EVENT_TX_COMPLETE = 1<<2,
-	EVENT_RADIO_RESET = 1<<8
+	EVENT_RADIO_RESET = 1<<7
 };
 
 ENUM_CLASS_FLAG(PacketFlags);
@@ -140,6 +140,8 @@ public:
 
     void irqTask();
     void mainTask();
+
+    bool waitPacketSent();
 //protected:
 
 	struct {
@@ -155,6 +157,7 @@ public:
 	void handleRxComplete() override;
 	void handleReset() override;
 	bool sendAck(Packet* inPkt);
+	bool sendRcAck();
 
 	xpcc::Event irqEvent;
 	xpcc::Event dataEvent;
