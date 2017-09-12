@@ -21,13 +21,14 @@ Scheduler::Scheduler()
 void Scheduler::init()
 {
 
-	mpuIntHandle = MpuInt::attachInterrupt([this]() {
+	auto it = MpuInt::attachInterrupt([this]() {
 		//mpu6k_evt.signal();
 		chibios_rt::System::lockFromIsr();
 		mpu_evt.broadcastFlagsI(MPU_EVENT_MASK);
 		chibios_rt::System::unlockFromIsr();
 
 	}, xpcc::IntEdge::RISING_EDGE);
+	it.leak();
 
 	Thread::start(HIGHPRIO-1);
 

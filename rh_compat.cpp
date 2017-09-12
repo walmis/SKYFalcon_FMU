@@ -71,7 +71,9 @@ void pinMode(uint8_t pin, WiringPinMode mode) {
 }
 
 void attachInterrupt(uint8_t pin, void (*fn)(void), int mode) {
-	GPIO::attachInterrupt(GPIO_IDToPort(pin), GPIO_IDToPin(pin), fn, xpcc::IntEdge::FALLING_EDGE);
+	auto it = GPIO::attachInterrupt(GPIO_IDToPort(pin),
+			GPIO_IDToPin(pin), fn, xpcc::IntEdge::FALLING_EDGE);
+	it.leak();
 }
 
 void digitalWrite(uint8_t pin, uint8_t val) {
