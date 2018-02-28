@@ -42,7 +42,8 @@ HAL_XPCC::HAL_XPCC() :
         &rcoutDriver,
         &schedulerInstance,
         &utilInstance,
-		0 //AP_HAL::OpticalFlow
+		0, //AP_HAL::OpticalFlow
+		0 //CanManager
 		)
 {}
 

@@ -28,8 +28,8 @@ public:
 
 	bool call() {
 		if(!callback) return false;
-
-		return callback();
+		callback();
+		return true;
 	}
 
 	uint32_t getPeriod() { return period; }

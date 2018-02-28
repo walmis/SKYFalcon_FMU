@@ -15,7 +15,7 @@ if(NOT DEFINED ${FRAME})
 SET(FRAME quad)
 endif()
 
-SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon-${FRAME} BUILDROOT=${CMAKE_BINARY_DIR}/ardupilot/build)
+SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon BUILDROOT=${CMAKE_BINARY_DIR}/ardupilot/build)
 
 ExternalProject_Add(ardupilot
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/../ardupilot

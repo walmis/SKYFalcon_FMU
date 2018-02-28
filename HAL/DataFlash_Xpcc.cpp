@@ -445,7 +445,7 @@ bool DataFlash_Xpcc::NeedPrep() {
 void DataFlash_Xpcc::Prep() {
 }
 
-uint16_t DataFlash_Xpcc::bufferspace_available() {
+uint32_t DataFlash_Xpcc::bufferspace_available() {
 	return writer.bytesAvailable();
 }
 

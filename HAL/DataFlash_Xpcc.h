@@ -89,7 +89,7 @@ public:
     bool NeedPrep();
     void Prep();
     bool WritePrioritisedBlock(const void *pBuffer, uint16_t size, bool is_critical);
-    uint16_t bufferspace_available();
+    uint32_t bufferspace_available();
 
     bool logging_enabled() const;
     bool logging_failed() const;
