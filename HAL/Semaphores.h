@@ -11,6 +11,7 @@ public:
     bool give();
     bool take(uint32_t timeout_ms);
     bool take_nonblocking();
+
 private:
 
     chibios_rt::BinarySemaphore sem;

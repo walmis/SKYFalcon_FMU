@@ -51,7 +51,7 @@ private:
 
 class XpccHAL::I2CDevice : public AP_HAL::I2CDevice, xpcc::I2cWriteReadTransaction {
 public:
-	I2CDevice(uint8_t address);
+	I2CDevice(uint8_t address) ;
 	virtual ~I2CDevice();
 
 	friend Timer;
@@ -82,7 +82,9 @@ public:
 										 uint32_t recv_len, uint8_t times);
 
 	/* See Device::get_semaphore() */
-	AP_HAL::Semaphore *get_semaphore() override;
+	AP_HAL::Semaphore *get_semaphore() {
+		return (AP_HAL::Semaphore*)&_semaphore;
+	}
 
 	/* See Device::register_periodic_callback() */
 	Device::PeriodicHandle register_periodic_callback(
@@ -101,12 +103,14 @@ private:
     static void busReset();
     bool startTransaction();
 
-    static thread_t* bus_thread;
-    static Semaphore _semaphore;
     uint8_t error_count = 0;
     uint8_t retries = 0;
+
+    static thread_t* bus_thread;
+    static Semaphore _semaphore;
     static Timer* timers[NUM_BUS_TIMERS];
     static uint8_t registered_timers;
+
 };
 
 class XpccHAL::I2CDeviceManager : public AP_HAL::I2CDeviceManager{

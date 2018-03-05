@@ -11,7 +11,11 @@ bool Semaphore::give() {
 }
 
 bool Semaphore::take(uint32_t timeout_ms) {
-	return sem.wait(MS2ST(timeout_ms)) == MSG_OK;
+	if(timeout_ms == HAL_SEMAPHORE_BLOCK_FOREVER) {
+		return sem.wait(TIME_INFINITE) == MSG_OK;
+	} else {
+		return sem.wait(MS2ST(timeout_ms)) == MSG_OK;
+	}
 }
 
 bool Semaphore::take_nonblocking() {

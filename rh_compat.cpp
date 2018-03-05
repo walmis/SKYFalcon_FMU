@@ -8,6 +8,7 @@
 
 using namespace xpcc::stm32;
 
+extern "C"
 int printf(const char* fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);

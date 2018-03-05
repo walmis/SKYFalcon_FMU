@@ -62,7 +62,7 @@ void Radio::mainTask() {
 
 				if(headerFlags() & PacketFlags::PACKET_RC) {
 					RCPacket* pkt = (RCPacket*) rxBuf;
-					printf("rc %d\n", headerId());
+					//printf("rc %d\n", headerId());
 				}
 
 				rxDataLen = 0;

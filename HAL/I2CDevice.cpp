@@ -12,6 +12,8 @@ extern const AP_HAL::HAL& hal;
 
 #define I2C xpcc::stm32::I2cMaster1
 
+#define CHECK_SEM() { if(_semaphore.take_nonblocking()) AP_HAL::panic("semaphore not taken"); }
+
 Semaphore I2CDevice::_semaphore;
 thread_t* I2CDevice::bus_thread;
 Timer* I2CDevice::timers[NUM_BUS_TIMERS];
@@ -92,14 +94,17 @@ bool I2CDevice::startTransaction() {
 	uint8_t retry_count = 3;
 retry:
 	retry_count--;
+
+	CHECK_SEM();
+
 	if(!I2C::start(this)) {
 		//XPCC_LOG_DEBUG << "e1";
 		error_count++;
 		return false;
 	}
 
-	if(!wait(3)) {
-		XPCC_LOG_DEBUG .printf("i2c Timeout (%d, %d)\n", getState(), this->error);
+	if(!wait(30)) {
+		XPCC_LOG_DEBUG .printf("i2c Timeout dev %x (%d, %d)\n", this->get_bus_address(), getState(), this->error);
 		XPCC_LOG_DEBUG .printf("I2c: CR1:%x CR2:%x SR1:%x SR2:%x\n", I2C1->CR1, I2C1->CR2, I2C1->SR1, I2C1->SR2);
 
 		XPCC_LOG_DEBUG .printf("Reset st:%d\n", I2C::resetTransaction(this));
@@ -200,7 +205,6 @@ I2CDevice::I2CDevice(uint8_t address) {
 	if(!bus_thread) {
 		bus_thread = chThdCreateStatic(mem, sizeof(mem), NORMALPRIO+1, &busThread, 0);
 	}
-
 	set_address(address);
 }
 
@@ -239,11 +243,6 @@ bool XpccHAL::I2CDevice::read_registers_multiple(uint8_t first_reg,
 	}
 	return startTransaction();
 }
-
-AP_HAL::Semaphore* XpccHAL::I2CDevice::get_semaphore() {
-	return &_semaphore;
-}
-
 
 void Timer::tmrcb(void* arg) {
 	Timer* t = (Timer*)arg;

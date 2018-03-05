@@ -103,7 +103,7 @@ add_subdirectory(chibi)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-math-errno -Wno-non-virtual-dtor")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-math-errno")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-math-errno")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-math-errno -flto")
 add_definitions(-DSKYFALCON_GITVER="${SKYFALCON_GITVER}" -DARDUPILOT_GITVER="${ARDUPILOT_GITVER}")
 MESSAGE("Git version ${SKYFALCON_GITVER}")
 add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD

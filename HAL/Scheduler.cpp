@@ -66,15 +66,15 @@ void Scheduler::_failsafe_timer_event() {
 }
 
 
-void Scheduler::delay_microseconds_boost(uint16_t us) {
-	if(us == 0) return;
-	//chibios_rt::BaseThread::setPriority(HIGHPRIO);
-	//ch.mainthread.p_prio = HIGHPRIO;
-	chibios_rt::BaseThread::sleep(us);
-
-	//chVTSet(&timer, 150, restore_priority, (void*)0);
-	//chibios_rt::BaseThread::setPriority(NORMALPRIO);
-}
+//void Scheduler::delay_microseconds_boost(uint16_t us) {
+//	if(us == 0) return;
+//	//chibios_rt::BaseThread::setPriority(HIGHPRIO);
+//	//ch.mainthread.p_prio = HIGHPRIO;
+//	chibios_rt::BaseThread::sleep(us);
+//
+//	//chVTSet(&timer, 150, restore_priority, (void*)0);
+//	//chibios_rt::BaseThread::setPriority(NORMALPRIO);
+//}
 
 chibios_rt::EvtSource* Scheduler::getSync() {
 	return &mpu_evt;
