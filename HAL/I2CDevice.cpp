@@ -172,7 +172,7 @@ void I2CDevice::busThread(void* arg) {
 			ev = chEvtWaitOneTimeout(ALL_EVENTS & ~XpccHAL::Scheduler::MPU_EVENT_MASK, 100);
 			uint8_t event_id = __builtin_ctzl(ev); //count trailing zeroes
 
-			if(event_id > NUM_BUS_TIMERS) {
+			if(event_id >= NUM_BUS_TIMERS) {
 				asm("nop");
 
 			} else {
@@ -185,7 +185,7 @@ void I2CDevice::busThread(void* arg) {
 
 					if(!tmr->call()) {
 						tmr->stop();
-						timers[event_id] = 0;
+						timers[event_id] = nullptr;
 						delete tmr;
 					}
 					_semaphore.give();
@@ -200,12 +200,15 @@ void I2CDevice::busThread(void* arg) {
 	}
 }
 
+static stkalign_t mem[256];
+
 I2CDevice::I2CDevice(uint8_t address) {
-	static stkalign_t mem[128];
 	if(!bus_thread) {
 		bus_thread = chThdCreateStatic(mem, sizeof(mem), NORMALPRIO+1, &busThread, 0);
 	}
 	set_address(address);
+    set_device_bus(0);
+    set_device_address(address);
 }
 
 I2CDevice::~I2CDevice() {

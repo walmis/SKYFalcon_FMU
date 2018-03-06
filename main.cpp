@@ -41,7 +41,7 @@
 
 #include "pindefs.hpp"
 #include "dfu.hpp"
-
+#include "mpu.h"
 #include "radio.hpp"
 
 #include <ch.hpp>
@@ -194,14 +194,8 @@ protected:
 //extern AP_HAL::HAL::Callbacks copter;
 void HAL_XPCC::run(int argc, char * const argv[], Callbacks* callbacks) const {
 	dbginit();
-	//Catch NULL pointers
-	int region = 0;
-	MPU->RNR = region;
-	MPU->RBAR = 0;
-	MPU->RASR = MPU_RASR_ENABLE_Msk | ((20-1)<<MPU_RASR_SIZE_Pos) | MPU_RASR_SRD_Msk ;
 
-	MPU->CTRL |= MPU_CTRL_ENABLE_Msk | MPU_CTRL_PRIVDEFENA_Msk;
-	////
+	mpu_init();
 
 	stm32::SysTickTimer::enable();
 	usb.addInterfaceHandler(dfu);

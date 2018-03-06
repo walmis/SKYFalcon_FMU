@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 include(ExternalProject)
 
 SET(XPCC_DIR ${CMAKE_SOURCE_DIR}/../xpcc/)
+SET(ARDUPILOT_BUILD_DIR ${CMAKE_BINARY_DIR}/ardupilot.build)
 SET(PLATFORM "stm32f4")
 SET(PROJECT_NAME "SKYFalcon_FMU")
 #SET(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/stm32/linkscript.ld")
 SET(XPCC_CMAKE_DEFINES "-DCHIBI_RTOS=1")
-SET(LIBRARIES "${CMAKE_BINARY_DIR}/ardupilot/build/libArduCopter.a") #additional libraries
+SET(LIBRARIES "${CMAKE_BINARY_DIR}/${ARDUPILOT_BUILD_DIR}/build/libArduCopter.a") #additional libraries
 
 set(USB_PRODUCT_ID 0x32fc)
 set(USB_VENDOR_ID 0xffff)
@@ -15,13 +16,13 @@ if(NOT DEFINED ${FRAME})
 SET(FRAME quad)
 endif()
 
-SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon BUILDROOT=${CMAKE_BINARY_DIR}/ardupilot/build)
+SET(ARDUPILOT_MAKE $(MAKE) -C ArduCopter skyfalcon BUILDROOT=${ARDUPILOT_BUILD_DIR}/build)
 
 ExternalProject_Add(ardupilot
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/../ardupilot
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE 1
-    PREFIX ardupilot
+    PREFIX ardupilot.build
     BUILD_COMMAND ${ARDUPILOT_MAKE}
     INSTALL_COMMAND ""
 )
@@ -33,7 +34,7 @@ add_definitions(
 include_directories(
 ../ardupilot/ArduCopter
 ../ardupilot/libraries
-${CMAKE_BINARY_DIR}/ardupilot/build/libraries/GCS_MAVLink/
+${ARDUPILOT_BUILD_DIR}/build/libraries/GCS_MAVLink/
 )
 
 add_custom_target(
@@ -76,6 +77,7 @@ set(SOURCES
 	./AP_Radio.cpp
 	./stm32/startup.c
 	./stm32/system_stm32f4xx.c
+	./mpu.c
 	#./stm32/stm32f4xx_flash.c
 )
 

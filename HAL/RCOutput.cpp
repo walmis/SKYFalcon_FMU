@@ -34,6 +34,7 @@ void RCOutput::disable_ch(uint8_t ch)
 
 void RCOutput::write(uint8_t ch, uint16_t period_us)
 {
+	if(ch >= num_channels) return;
 	_channels[ch] = period_us;
 	pwm.setOutput(ch, period_us);
 }
@@ -46,6 +47,7 @@ void RCOutput::write(uint8_t ch, uint16_t* period_us, uint8_t len)
 }
 
 uint16_t RCOutput::read(uint8_t ch) {
+	if(ch >= num_channels) return 0;
     return _channels[ch];
 }
 

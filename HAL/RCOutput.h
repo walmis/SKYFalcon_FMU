@@ -4,6 +4,8 @@
 
 #include "../HAL/AP_HAL_XPCC.h"
 
+constexpr int num_channels = 9;
+
 class XpccHAL::RCOutput : public AP_HAL::RCOutput {
     void     init();
     void     set_freq(uint32_t chmask, uint16_t freq_hz);
@@ -19,9 +21,10 @@ class XpccHAL::RCOutput : public AP_HAL::RCOutput {
     void 	 push();
 
 private:
+
     uint32_t prescale;
     uint16_t freq;
-    uint16_t _channels[9];
+    uint16_t _channels[num_channels];
 };
 
 #endif // __AP_HAL_EMPTY_RCOUTPUT_H__

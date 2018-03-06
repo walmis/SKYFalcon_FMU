@@ -79,8 +79,9 @@ size_t UARTDriver::write(uint8_t c) {
 size_t UARTDriver::write(const uint8_t *buffer, size_t size)
 {
     size_t n = 0;
-    if(!_device)
+    if(!_device || !size)
     	return 0;
+
 
 //	if(_blocking_writes || _device->txAvailable() < 0) {
 //		while (size--) {

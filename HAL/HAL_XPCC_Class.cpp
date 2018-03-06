@@ -52,10 +52,11 @@ void AP_HAL::init() {
 
 }
 
+const HAL_XPCC hal;
+
 namespace AP_HAL {
 
-const HAL& get_HAL() {
-	static const HAL_XPCC hal;
+const AP_HAL::HAL& get_HAL() {
 	return hal;
 }
 
