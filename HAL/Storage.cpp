@@ -5,6 +5,8 @@
 #include <xpcc/container/linked_list.hpp>
 #include <xpcc/architecture.hpp>
 #include <xpcc/driver/storage/i2c_eeprom.hpp>
+#include <new>
+
 using namespace XpccHAL;
 using namespace xpcc;
 
@@ -12,14 +14,67 @@ extern const AP_HAL::HAL& hal;
 
 static I2cEeprom<xpcc::stm32::I2cMaster1> eeprom(0x50, 2, 32);
 
-uint8_t eeprom_block[8192];
+class PendingBlock {
+public:
+	static void push(uint16_t loc, uint8_t* data, uint8_t size) {
+		PendingBlock* b = new (size) PendingBlock;
+		b->_size = size;
+		b->next = 0;
+		b->loc = loc;
 
-struct WriteOperation {
-	uint16_t	address;
-	uint8_t		count;
+		memcpy(b->payload(), data, size);
+
+		if(!base) {
+		    base = b;
+		} else {
+		    auto *t = base;
+		    while(t->next) {
+		        t = t->next;
+		    }
+		    t->next = b;
+		}
+	}
+
+	static AP_HAL::OwnPtr<PendingBlock> pop() {
+		PendingBlock* b = base;
+		if(b) {
+			base = b->next;
+		}
+		return AP_HAL::OwnPtr<PendingBlock>(b);
+	}
+
+	uint8_t* payload() {
+	    return (uint8_t*)this+sizeof(PendingBlock);
+	}
+
+	uint8_t size() {
+	    return _size;
+	}
+
+	uint16_t addr() {
+		return loc;
+	}
+
+
+	void operator delete(void* ptr) {
+	    free(ptr);
+	}
+
+private:
+    PendingBlock() {}
+
+	void* operator new(std::size_t count, int payload) {
+		return calloc(count+payload, 1);
+	}
+
+	static PendingBlock* base;
+
+	uint8_t _size;
+	uint16_t loc;
+	PendingBlock* next = nullptr;
+	///.... data
 };
-
-xpcc::LinkedList<WriteOperation> op_list;
+PendingBlock* PendingBlock::base = 0;
 
 Storage::Storage()
 {
@@ -27,14 +82,6 @@ Storage::Storage()
 
 void Storage::init()
 {
-	//read 8k eeprom to memory
-	//dbgset(0);
-	for(uint32_t i = 0; i < 8192; i+=128) {
-		if(!eeprom.read(i, &eeprom_block[i], 128)) {
-			AP_HAL::panic("PANIC: Eeprom init failed\n");
-		}
-	}
-	//dbgclr(0);
 
 	start(NORMALPRIO-1);
 }
@@ -43,13 +90,15 @@ void Storage::read_block(void* dst, uint16_t addr, size_t n) {
 //	if(xpcc::isInterruptContext()) {
 //		hal.scheduler->panic("PANIC: eeprom read from ISR\n");
 //	}
-	//XPCC_LOG_DEBUG .printf("r %d %d\n", src, n);
+	XPCC_LOG_DEBUG .printf("er %d %d\n", addr, n);
 	if(addr+n > 8192) {
 		return;
 	}
 
 	//printf("read %d\n", addr);
-	memcpy(dst, &eeprom_block[addr], n);
+	//memcpy(dst, &eeprom_block[addr], n);
+
+	eeprom.read(addr, (uint8_t*)dst, n);
 }
 
 void Storage::main() {
@@ -57,28 +106,20 @@ void Storage::main() {
 	while(1) {
 		dataEvt.wait(100);
 
-		while(!op_list.isEmpty()) {
-			WriteOperation op = op_list.getFront();
-			eeprom.write(op.address, &eeprom_block[op.address], op.count);
-			eeprom_lock.lock();
-			op_list.removeFront();
-			eeprom_lock.unlock();
-		}
+//		eeprom_lock.lock();
+//		op_list.removeFront();
+//		eeprom_lock.unlock();
+
 	}
 }
 
 void Storage::write_block(uint16_t loc, const void* src, size_t n)
 {
+	XPCC_LOG_DEBUG .printf("ew %d %d\n", loc, n);
 	if(loc+n > 8192) return;
 
-	memcpy(&eeprom_block[loc], src, n);
-
-	WriteOperation op;
-	op.address = loc;
-	op.count = n;
-
 	eeprom_lock.lock();
-	op_list.append(op);
+	PendingBlock::push(loc, (uint8_t*)src, n);
 	eeprom_lock.unlock();
 
 	dataEvt.signal();
