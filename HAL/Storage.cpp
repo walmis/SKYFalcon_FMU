@@ -5,6 +5,7 @@
 #include <xpcc/container/linked_list.hpp>
 #include <xpcc/architecture.hpp>
 #include <xpcc/driver/storage/i2c_eeprom.hpp>
+#include "I2CDevice.h"
 #include <new>
 
 using namespace XpccHAL;
@@ -13,6 +14,12 @@ using namespace xpcc;
 extern const AP_HAL::HAL& hal;
 
 static I2cEeprom<xpcc::stm32::I2cMaster1> eeprom(0x50, 2, 32);
+
+#define USEBLOCK 1
+
+#ifdef USEBLOCK
+uint8_t eeprom_block[8192];
+#endif
 
 class PendingBlock {
 public:
@@ -76,29 +83,47 @@ private:
 };
 PendingBlock* PendingBlock::base = 0;
 
+
 Storage::Storage()
 {
 }
 
 void Storage::init()
 {
-
+#ifdef USEBLOCK
+	for(int i = 0; i < 8192; i+=128) {
+		eeprom.read(i, (uint8_t*)eeprom_block+i, 128);
+	}
+#endif
 	start(NORMALPRIO-1);
 }
 
 void Storage::read_block(void* dst, uint16_t addr, size_t n) {
-//	if(xpcc::isInterruptContext()) {
-//		hal.scheduler->panic("PANIC: eeprom read from ISR\n");
-//	}
-	XPCC_LOG_DEBUG .printf("er %d %d\n", addr, n);
+
+	//XPCC_LOG_DEBUG .printf("er %d %d\n", addr, n);
 	if(addr+n > 8192) {
 		return;
 	}
 
 	//printf("read %d\n", addr);
-	//memcpy(dst, &eeprom_block[addr], n);
-
+#ifdef USEBLOCK
+	memcpy(dst, &eeprom_block[addr], n);
+#else
+	eeprom_lock.lock();
 	eeprom.read(addr, (uint8_t*)dst, n);
+	eeprom_lock.unlock();
+#endif
+#if 0
+	uint8_t tmp[n];
+	eeprom_lock.lock();
+	if(!eeprom.read(addr, tmp, n)) {
+		printf("readerr\n");
+	}
+	eeprom_lock.unlock();
+	if(memcmp(tmp, dst, n) != 0) {
+		printf("mismatch\n");
+	}
+#endif
 }
 
 void Storage::main() {
@@ -106,18 +131,30 @@ void Storage::main() {
 	while(1) {
 		dataEvt.wait(100);
 
-//		eeprom_lock.lock();
-//		op_list.removeFront();
-//		eeprom_lock.unlock();
+		eeprom_lock.lock();
+		while(1) {
+			auto blk = PendingBlock::pop();
+			if(blk) {
+				//printf("wr %d %d\n", blk->addr(), blk->size());
+				//XPCC_LOG_DEBUG .dump_buffer((uint8_t*)blk->payload(), blk->size());
+				eeprom.write(blk->addr(), blk->payload(), blk->size() );
+			} else {
+				break;
+			}
+		}
+		eeprom_lock.unlock();
 
 	}
 }
 
 void Storage::write_block(uint16_t loc, const void* src, size_t n)
 {
-	XPCC_LOG_DEBUG .printf("ew %d %d\n", loc, n);
+	//XPCC_LOG_DEBUG .printf("ew %d %d\n", loc, n);
+	//XPCC_LOG_DEBUG .dump_buffer((uint8_t*)src, n);
 	if(loc+n > 8192) return;
-
+#ifdef USEBLOCK
+	memcpy(&eeprom_block[loc], src, n);
+#endif
 	eeprom_lock.lock();
 	PendingBlock::push(loc, (uint8_t*)src, n);
 	eeprom_lock.unlock();

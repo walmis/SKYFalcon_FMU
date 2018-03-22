@@ -12,7 +12,8 @@ extern const AP_HAL::HAL& hal;
 
 #define I2C xpcc::stm32::I2cMaster1
 
-#define CHECK_SEM() { if(_semaphore.take_nonblocking()) AP_HAL::panic("semaphore not taken"); }
+//#define CHECK_SEM() { if(_semaphore.take_nonblocking()) AP_HAL::panic("semaphore not taken"); }
+#define CHECK_SEM()
 
 Semaphore I2CDevice::_semaphore;
 thread_t* I2CDevice::bus_thread;
